@@ -59,7 +59,7 @@ set4plot$legend.title$fb         <- "Feedback"
 # Labels ------------------------------------------------------------------
 
 set4plot$labels4legend <- dbGetSrc("t_q_condlabels")
-
+set4plot$labels4legend$condlabel <- gsub(" ", "\n", set4plot$labels4legend$condlabel)
 
 
 

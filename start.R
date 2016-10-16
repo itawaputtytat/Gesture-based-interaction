@@ -45,7 +45,7 @@ cat("Connecting to database ... \n")
 ## Prompt for database
 cat("* Select database / study (\"1-3\"/\"4\")? \n")
 studyselect <- readline(">>> ")
-
+4
 ## Connect to database
 source("db/dbConn.R")
 
@@ -94,7 +94,7 @@ source("vis/plotItemProfile.R")
 source("vis/attrakdiff_rect.R")
 source("vis/plotItemProfile4attrakdiff_template.R")
 source("vis/plotItemProfile4attrakdiff.R")
-source("vis/plotMatrix4attrakdiff_template.R")
+#source("vis/plotMatrix4attrakdiff_template.R")
 source("vis/plotMatrix4attrakdiff.R")
 source("vis/plotItemProfile_post4nat.R")
 

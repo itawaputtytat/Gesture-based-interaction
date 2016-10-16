@@ -21,9 +21,9 @@ plotBoxplot <-
     ggplot(data = data2process,
            aes_string(x = groupvar,
                       y = yvar)) + 
-    stat_boxplot(geom ='errorbar', size = 0.25) + 
+    stat_boxplot(geom ='errorbar', size = 0.25) +
     geom_boxplot(fill = "white",
-                 notch = TRUE, 
+                 notch = TRUE,
                  notchwidth = .9,
                  outlier.size = 1,
                  outlier.shape = NA,
@@ -31,20 +31,20 @@ plotBoxplot <-
                  fatten = 1.5) +
     geom_boxplot(aes_string(fill = groupvar),
                  alpha = 0.5,
-                 notch = TRUE, 
+                 notch = TRUE,
                  notchwidth = .9,
                  outlier.size = 1,
                  outlier.shape = NA,
                  lwd = 0.25,
                  fatten = 1.5) +
     geom_point(aes_string(col = groupvar),
-               size = 1,
+               size = 0.35,
                position = position_jitter(w = 0.05, h = 0)) + 
-    ## Set colours for groupvar and new labels
-    scale_x_discrete(labels = createLabels4PlotLegend(dataname, groupvar)) + 
-    scale_color_manual(values = colset4groupvar, 
+    # Set colours for groupvar and new labels
+    scale_x_discrete(labels = createLabels4PlotLegend(dataname, groupvar)) +
+    scale_color_manual(values = colset4groupvar,
                        labels = createLabels4PlotLegend(dataname, groupvar)) +
-    scale_fill_manual(values = colset4groupvar, 
+    scale_fill_manual(values = colset4groupvar,
                       labels = createLabels4PlotLegend(dataname, groupvar))
   
   return(plotdata)

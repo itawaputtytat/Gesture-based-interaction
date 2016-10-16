@@ -31,7 +31,7 @@ plotdata <- makePrintablePlot_theme(plotdata)
 source("postprocessing/adjustMarginGtable.R")
 
 ggsave(filename = "q_acc_motorway_boxplot_expfocus.png",
-       plot = plot(plotdata),
+       plot = plotdata,
        path = file.path(set4plot$dir4plot, "boxplots"), 
        width = 12.5, height = 6, units = "cm", dpi = 600)
 
@@ -44,7 +44,7 @@ plotdata <- makePrintablePlot_theme(plotdata)
 source("postprocessing/adjustMarginGtable.R")
 
 ggsave(filename = "q_acc_motorway_boxplot_typegeneric.png",
-       plot = plot(plotdata),
+       plot = plotdata,
        path = file.path(set4plot$dir4plot, "boxplots"), 
        width = 12.5, height = 6, units = "cm", dpi = 600)
 

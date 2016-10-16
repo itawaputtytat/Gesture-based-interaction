@@ -20,7 +20,6 @@ source("preprocessing/dataPreparation.R")
 
 
 
-
 # Boxplots ----------------------------------------------------------------
 
 ## Complete variation ----
@@ -28,12 +27,14 @@ plotdata <- plotBoxplot(name4data$df, "score", "score", ylim4score, "expfocus")
 plotdata <- makePrintablePlot_boxPlot(plotdata)
 plotdata <- makePrintablePlot_theme(plotdata)
 
-source("postprocessing/adjustMarginGtable.R")
-ggsave <- ggplot2::ggsave; body(ggsave) <- body(ggplot2::ggsave)[-2]
+
+#source("postprocessing/adjustMarginGtable.R")
+
+#ggsave <- ggplot2::ggsave; body(ggsave) <- body(ggplot2::ggsave)[-2]
 ggsave(filename = "q_acc_city_boxplot_expfocus.png",
-       plot = grid.draw(plotdata),
+       plot = plotdata,
        path = file.path(set4plot$dir4plot, "boxplots"), 
-       width = 12.5, height = 6, units = "cm", dpi = 600)
+       width = 8, height = 4, units = "cm", dpi = 600)
 
 
 ## Touch vs. gestures ----
@@ -44,9 +45,9 @@ plotdata <- makePrintablePlot_theme(plotdata)
 source("postprocessing/adjustMarginGtable.R")
 
 ggsave(filename = "q_acc_city_boxplot_typegeneric.png",
-       plot = plot(plotdata),
+       plot = plotdata,
        path = file.path(set4plot$dir4plot, "boxplots"), 
-       width = 12.5, height = 6, units = "cm", dpi = 600)
+       width = 8, height = 4, units = "cm", dpi = 600)
 
 
 
