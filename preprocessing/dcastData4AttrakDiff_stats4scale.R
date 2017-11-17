@@ -1,24 +1,23 @@
-dcastData4AttrakDiff_stats4scale <- function (srcname, dataname, groupvar) {
+dcastData4AttrakDiff_stats4scale <- function (srcname, name4df, groupvar) {
 
   cat("* Processing with function: dcastData4AttrakDiff_stats4scale \n")
   
-  dataname <- 
-    paste(srcname$prefix, "_", dataname$df_long_main, groupvar, 
+  name4df <- 
+    paste(srcname$prefix, "_", name4df$df_long_main, groupvar, 
           "_stats4scale", sep = "")
   
-  data2process <- get(dataname)
+  dat2proc <- get(name4df) %>% data.frame()
+  dat2proc <- melt(dat2proc, id = c(groupvar, "scale"))
   
-  data2process <- melt(data2process, id = c(groupvar, "scale"))
+  dat2proc <- dcast(dat2proc, as.formula(paste(groupvar, "~ scale + variable", sep = "")))
   
-  data2process <- dcast(data2process, as.formula(paste(groupvar, "~ scale + variable", sep = "")))
+  name4df_new <- paste(name4df, "wide", sep = "_")
   
-  dataname_new <- paste(dataname, "wide", sep = "_")
-  
-  assign(dataname_new,
-         data2process,
+  assign(name4df_new,
+         dat2proc,
          env = .GlobalEnv)
   
-  cat("** Created variable: ", dataname_new, "\n", sep = "")
+  cat("** Created variable: ", name4df_new, "\n", sep = "")
   cat("*** Done! *** \n\n")
   
 }
