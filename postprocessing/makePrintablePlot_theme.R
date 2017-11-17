@@ -1,7 +1,7 @@
-makePrintablePlot_theme <- function(dat4plot) {
+makePrintablePlot_theme <- function(plotdata) {
   
-  dat4plot <- 
-    dat4plot() + 
+  plotdata <- 
+    last_plot() + 
     theme_bw() + 
     theme(plot.margin=unit(c(0.5, 0.5, 0.5, 0.5), units="line"),
           #plot.title = element_text(size = 10, face = "bold"),
@@ -14,7 +14,7 @@ makePrintablePlot_theme <- function(dat4plot) {
           ## Remove legend in boxplots
           legend.position = "NULL")
   
-  return(dat4plot)
+  return(plotdata)
   
   
 }

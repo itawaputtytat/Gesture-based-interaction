@@ -1,12 +1,12 @@
-buildOverallScore <- function (name4df) {
+buildOverallScore <- function (dataname) {
+   
+  cat("* Processing with function: buildOVerallScore \n")
   
-  outputFunProc(R)
+  assign(dataname, 
+         get(dataname) %>% 
+           mutate(score = rowSums(.[itemsets[[name4dbsrc$q]]])),
+         env = .GlobalEnv) 
   
-  dat2proc <- 
-    get(name4df) %>% 
-    mutate( score = rowSums(.[itemsets[[name4dbsrc$q]]]) )
+  cat("** Added rowSums to: ", dataname, "\n", sep = "")
   
-  assign(name4df, dat2proc, env = .GlobalEnv) 
-  
-  outputDone()
 }

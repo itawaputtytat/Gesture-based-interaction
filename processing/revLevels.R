@@ -1,11 +1,14 @@
-revLevels <- function(dat2proc, varname) {
+revLevels <- function(data, varname) {
   
-  dat2proc[, varname] <- as.character(dat2proc[, varname])
-  dat2proc[, varname] <- 
-     with(dat2proc, 
-          reorder(get(varname), 
-                  get(varname), function(x) -length(x)))
+  data[, varname] <- as.character(data[, varname])
+  #data <- arrange(data, desc(variable))
   
-  #levels(dat2proc[, varname]) <- rev(levels(dat2proc[, varname]))
-  return(dat2proc)
+   data[, varname] <- 
+     with(data, reorder(get(varname), get(varname), function(x) -length(x)))
+  
+  #levels(data[, varname]) <- 
+   # rev(levels(data[, varname]))
+  
+  return(data)
+  
 }

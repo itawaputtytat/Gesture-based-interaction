@@ -2,10 +2,3 @@
 .Rhistory
 .RData
 .Ruserdata
-.png
-.pdf
-.Dat
-*.Dat
-analysis_study4/_data_stisim/*.Dat
-*.pdf
-*.png

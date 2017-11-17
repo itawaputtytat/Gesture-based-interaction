@@ -1,25 +1,27 @@
-computeMeanSD4AttrakDiff <- function (name4df, suffix, var2group) {
+computeMeanSD4AttrakDiff <- function (srcname, dataname, var2group) {
   
   cat("* Processing with function computeMeanSD4AttrakDiff \n")
   
-  name4df <- paste(name4df, suffix, sep = "")
-  dat2proc <- get(name4df) %>% data.frame()
+  dataname <- 
+    paste(srcname$prefix, "_", dataname$df_long_main, var2group, sep = "")
   
-  dat2proc <- 
-    dat2proc %>%
+  data2process <- get(dataname)
+  
+  data2process <- 
+    data2process %>%
     group_by_(var2group, "scale") %>%
     summarise(id_n = length(unique(id)),
               score_mean = mean(value, na.rm = T),
               score_sd   = sd(value, na.rm = T)) %>%
     mutate(score_error = qnorm(0.975) * score_sd / sqrt(id_n))
   
-  name4df_new <- paste(name4df, "stats4scale", sep = "_")
+  dataname_new <- paste(dataname, "stats4scale", sep = "_")
   
-  assign(name4df_new,
-         dat2proc,
+  assign(dataname_new,
+         data2process,
          env = .GlobalEnv) 
   
-  cat("** Created variable: ", name4df_new, "\n", sep = "")
+  cat("** Created variable: ", dataname_new, "\n", sep = "")
   cat("*** Done! *** \n\n")
   
 }

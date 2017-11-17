@@ -1,113 +1,79 @@
 
-# Initialise objects ------------------------------------------------------
-
-set4items <- c()
-name4dbconn <- "dbconn_study1to3"
-
-
-
 # Acceptance --------------------------------------------------------------
 
-catWSepLine("Labels for questionnaire: Acceptance")
+cat("* Labels for questionnaire: Acceptance \n")
 
-set4items$labels$acc <- dbGetSrc(name4dbconn, "t_q_labels_acc")
-set4items$labels$acc <- set4items$labels$acc %>% arrange(itemnr)
-set4items$labels$acc <- set4items$labels$acc[, paste("item_", set4lang, sep = "")]
+itemlabels$acc <- dbGetSrc("t_q_labels_acc")
+itemlabels$acc <- itemlabels$acc %>% arrange(itemnr)
+itemlabels$acc <- itemlabels$acc[, paste("item_", setlanguage, sep = "")]
 
-set4items$names$acc <- 
-  paste("acc", sprintf("%02d", seq(1:length(set4items$labels$acc))), sep = "_")
+itemsets$acc <- 
+  paste("acc", sprintf("%02d", seq(1:length(itemlabels$acc))), sep = "_")
 
 
 
-# attrakdiff 2 ------------------------------------------------------------
+# AttrakDiff 2 ------------------------------------------------------------
 
-catWSepLine("Labels for questionnaire: Attrakdiff 2")
+cat("* Labels for questionnaire: AttrakDiff 2 \n")
 
-set4items$labels$attrakdiff <- dbGetSrc(name4dbconn, "t_q_labels_attrakdiff")
-set4items$labels$attrakdiff <- set4items$labels$attrakdiff %>% arrange(itemnr)
-set4items$labels$attrakdiff <- set4items$labels$attrakdiff[, paste("item", set4lang, sep = "_")]
+itemlabels$attrakdiff <- dbGetSrc("t_q_labels_attrakdiff")
+itemlabels$attrakdiff <- itemlabels$attrakdiff %>% arrange(itemnr)
+itemlabels$attrakdiff <- itemlabels$attrakdiff[, paste("item_", setlanguage, sep = "")]
 
-set4items$names$attrakdiff <- 
-  paste("attrakdiff", sprintf("%02d", seq(1:length(set4items$labels$attrakdiff))), sep = "_")
+itemsets$attrakdiff <- 
+  paste("attrakdiff", sprintf("%02d", seq(1:length(itemlabels$attrakdiff))), sep = "_")
 
-## New order of items to be consistent with resource pictures
-set4items$nrs$attrakdiff_pq  <- c(1:4, 6, 5, 28)
-set4items$nrs$attrakdiff_hqi <- c(7:13)
-set4items$nrs$attrakdiff_hqs <- c(14:19, 27)
-set4items$nrs$attrakdiff_hq  <- c(set4items$nrs$attrakdiff_hqi,
-                           set4items$nrs$attrakdiff_hqs)
-set4items$nrs$attrakdiff_att <- c(20:26)
+## New ordering of items to be consistent with resource pictures
+itemnr_attrakdiff_pq  <- c(1:4, 6, 5, 28)
+itemnr_attrakdiff_hqi <- c(7:13)
+itemnr_attrakdiff_hqs <- c(14:19, 27)
+itemnr_attrakdiff_hq  <- c(itemnr_attrakdiff_hqi,
+                           itemnr_attrakdiff_hqs)
+itemnr_attrakdiff_att <- c(20:26)
 
-set4items$nrs$attrakdiff_ordered <- 
-  c(set4items$nrs$attrakdiff_pq,
-    set4items$nrs$attrakdiff_hqi,
-    set4items$nrs$attrakdiff_hqs,
-    set4items$nrs$attrakdiff_att)
+itemnr_attrakdiff_ordered <- c(itemnr_attrakdiff_pq,
+                               itemnr_attrakdiff_hqi,
+                               itemnr_attrakdiff_hqs,
+                               itemnr_attrakdiff_att)
 
 
 
 # NASA-TLX ----------------------------------------------------------------
 
-catWSepLine("Labels for questionnaire: NASA-TLX")
+cat("* Labels for questionnaire: NASA-TLX \n")
 
-set4items$labels$nasatlx <- dbGetSrc(name4dbconn, "t_q_labels_nasatlx")
-set4items$labels$nasatlx <- set4items$labels$nasatlx %>% arrange(itemnr)
-set4items$labels$nasatlx <- set4items$labels$nasatlx[, paste("item_", set4lang, sep = "")]
+itemlabels$nasatlx <- dbGetSrc("t_q_labels_nasatlx")
+itemlabels$nasatlx <- itemlabels$nasatlx %>% arrange(itemnr)
+itemlabels$nasatlx <- itemlabels$nasatlx[, paste("item_", setlanguage, sep = "")]
 
-set4items$names$nasatlx <- 
-  paste("nasatlx", sprintf("%02d", seq(1:length(set4items$labels$nasatlx))), sep = "_")
+itemsets$nasatlx <- 
+  paste("nasatlx", sprintf("%02d", seq(1:length(itemlabels$nasatlx))), sep = "_")
 
-set4items$names$nasatlx[4] <- paste(set4items$names$nasatlx[4], "i", sep = "")
+itemsets$nasatlx[4] <- paste(itemsets$nasatlx[4], "i", sep = "")
 
 
 
 # Feedback ----------------------------------------------------------------
 
-catWSepLine("Labels for questionnaire: Feedback")
+cat("* Labels for questionnaire: Feedbacl \n")
 
-set4items$labels$fb <- dbGetSrc(name4dbconn, "t_q_labels_fb")
-set4items$labels$fb <- set4items$labels$fb %>% arrange(itemnr)
-set4items$labels$fb <- set4items$labels$fb[, paste("item_", set4lang, sep = "")]
+itemlabels$fb <- dbGetSrc("t_q_labels_fb")
+itemlabels$fb <- itemlabels$fb %>% arrange(itemnr)
+itemlabels$fb <- itemlabels$fb[, paste("item_", setlanguage, sep = "")]
 
-set4items$names$fb <- 
-  paste("fb", sprintf("%02d", seq(1:length(set4items$labels$db))), sep = "_")
+itemsets$fb <- 
+  paste("fb", sprintf("%02d", seq(1:length(itemlabels$db))), sep = "_")
 
 
 
 # Naturalness -------------------------------------------------------------
 
-catWSepLine("Labels for questionnaire: Naturalness")
+cat("* Labels for questionnaire: Naturalness \n")
 
-set4items$labels$nat <- dbGetSrc(name4dbconn, "t_q_labels_nat")
-set4items$labels$nat <- set4items$labels$nat %>% arrange(itemnr)
-set4items$labels$nat <- set4items$labels$nat[, paste("item_", set4lang, sep = "")]
+itemlabels$nat <- dbGetSrc("t_q_labels_nat")
+itemlabels$nat <- itemlabels$nat %>% arrange(itemnr)
+itemlabels$nat <- itemlabels$nat[, paste("item_", setlanguage, sep = "")]
 
-set4items$names$nat <- 
-  paste("nat", sprintf("%02d", seq(1:length(set4items$labels$nat))), sep = "_")
+itemsets$nat <- 
+  paste("nat", sprintf("%02d", seq(1:length(itemlabels$nat))), sep = "_")
 
-
-
-
-# Safety ------------------------------------------------------------------
-
-catWSepLine("Labels for questionnaire: Safety")
-
-set4items$labels$safety <- dbGetSrc("dbconn_study4", "t_q_labels_safety")
-set4items$labels$safety <- set4items$labels$safety %>% arrange(itemnr)
-set4items$labels$safety <- set4items$labels$safety[, paste("item_", set4lang, sep = "")]
-
-set4items$names$safety <- 
-  paste("safety", sprintf("%02d", seq(1:length(set4items$labels$safety))), sep = "_")
-
-
-
-# Evaluation --------------------------------------------------------------
-
-catWSepLine("Labels for questionnaire: Evaluation")
-
-set4items$labels$eval <- dbGetSrc("dbconn_study4", "t_q_labels_eval")
-set4items$labels$eval <- set4items$labels$eval %>% arrange(itemnr)
-set4items$labels$eval <- set4items$labels$eval[, paste("item_", set4lang, sep = "")]
-
-set4items$names$eval <- 
-  paste("eval", sprintf("%02d", seq(1:length(set4items$labels$eval))), sep = "_")

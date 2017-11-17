@@ -1,4 +1,6 @@
-plotBoxplot <- function(dataname, yvar, yname, ylimiter, groupvar) {
+plotBoxplot <- 
+  
+  function(dataname, yvar, yname, ylimiter, groupvar) {
   
   cat("* Visualising with function: plotBoxplot \n")
   cat("** Using data: ", dataname, "\n", sep = "")
@@ -46,7 +48,7 @@ plotBoxplot <- function(dataname, yvar, yname, ylimiter, groupvar) {
                       labels = createLabels4PlotLegend(dataname, groupvar))
   
   return(plotdata)
-  
+         
   cat("*** Done! *** \n")
   
 }
