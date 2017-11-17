@@ -1,20 +1,20 @@
 
-makePrintablePlot_ItemProfile <- function(plotdata) {
+makePrintablePlot_ItemProfile <- function(plotdat, q) {
 
-  plotdata <- 
-    plotdata + 
+  plotdat <- 
+    plotdat + 
     
     ggtitle("") +
     
     labs(x = "",
          y = "Scale",
-         shape = set4plot$legend.title[[name4dbsrc$q]],
-         colour = set4plot$legend.title[[name4dbsrc$q]])
+         shape = set4plot$legend.title[[q]],
+         colour = set4plot$legend.title[[q]])
   
   
-  plotdata <- 
+  plotdat <- 
     
-    plotdata +
+    plotdat +
     
     theme_bw() + 
     theme(plot.margin=unit(c(0.5, 0.5, 0.5, 0.5), units = "line"),
@@ -25,6 +25,7 @@ makePrintablePlot_ItemProfile <- function(plotdata) {
           axis.title.y = element_blank(),
           axis.text.x = element_text(size = 7),
           axis.text.y = element_text(size = 7),
+          legend.background = element_blank(),
           legend.position = "right",
           legend.margin = unit(-1, "lines"),
           legend.key = element_blank(),
@@ -34,6 +35,6 @@ makePrintablePlot_ItemProfile <- function(plotdata) {
           legend.text = element_text(size = 7))
 
 
-  return(plotdata)
+  return(plotdat)
 
 }

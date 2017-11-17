@@ -43,7 +43,7 @@ set4plot$ylim4items$nat <- c(-0.5, 5.5)
 
 # Export ------------------------------------------------------------------
 
-set4plot$dir4plot <- file.path("plots", dbset$name)
+set4plot$dir4plot <- file.path("plots", set4db$name)
 
 
 
@@ -58,13 +58,15 @@ set4plot$legend.title$fb         <- "Feedback"
 
 # Labels ------------------------------------------------------------------
 
-set4plot$labels4legend <- dbGetSrc("t_q_condlabels")
+set4plot$labels4legend <- 
+  rbind(dbGetSrc("dbconn_study1to3", "t_q_condlabels"),
+        dbGetSrc("dbconn_study4", "t_q_condlabels"))
 set4plot$labels4legend$condlabel <- gsub(" ", "\n", set4plot$labels4legend$condlabel)
 
 
 
 
-colset <- list(
+set4plot$colset <- list(
   expfocus = 
     list(exp1_mouse = "darkorange2",
          exp2_mouse = "darkorange2",
@@ -88,7 +90,7 @@ colset <- list(
          city_touch_complex = "magenta4",
          gestures = "red2",
          touch = "magenta3"),
-  typedetail = 
+  type_detail = 
     list(mouse = "darkorange2",
          nui = "red2",
          bi = "magenta",
@@ -96,13 +98,13 @@ colset <- list(
          gestures_complex = "red3",
          touch_simple = "magenta3",
          touch_complex = "magenta4"),
-  typegeneric = 
+  type_generic = 
     list(mouse = "darkorange2",
          gesture = "red2",
          gestures = "red2",
          touch = "magenta3"))
 
-shapeset <- list(
+set4plot$shapeset <- list(
   expfocus = 
     list(exp1_mouse = 15,
          exp2_mouse = 16,
@@ -126,7 +128,7 @@ shapeset <- list(
          city_touch_complex = 17,
          gestures = 16,
          touch = 17),
-  typedetail = 
+  type_detail = 
     list(mouse = 15,
          nui = 15,
          bi = 15,
@@ -135,7 +137,7 @@ shapeset <- list(
          touch_simple = 17,
          touch_complex = 17
          ),
-  typegeneric = 
+  type_generic = 
     list(mouse = 15,
          gesture = 15,
          gestures = 16,

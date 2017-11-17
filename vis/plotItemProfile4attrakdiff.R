@@ -16,8 +16,10 @@ plotItemProfile4attrakdiff <- function (dataname, statkeyvalue, groupvar) {
   data2process$variable <- factor(data2process$variable)
   
   # Reverese levels of data variable for correct dispay (because coord_flip)
-  neworderedlevels <- rev(unique(data2process$variable))
-  rev_itemnr <- rev(itemnr_attrakdiff_ordered)
+  #neworderedlevels <- rev(unique(data2process$variable))
+  #rev_itemnr <- rev(itemnr_attrakdiff_ordered)
+  neworderedlevels <- rev(unique(dat2proc$variable))
+  rev_itemnr <- rev(set4items[["attrakdiff"]]$itemnrs4scales_ordered)
   
   # Create adjusted colour set
   data2process[, groupvar] <- as.factor(data2process[, groupvar])
@@ -48,7 +50,7 @@ plotItemProfile4attrakdiff <- function (dataname, statkeyvalue, groupvar) {
                        labels = createLabels4PlotLegend(dataname, groupvar)) +
     scale_shape_manual(values = shapeset4groupvar, 
                        labels = createLabels4PlotLegend(dataname, groupvar)) + 
-    scale_x_discrete(limits = neworderedlevels,
+    scale_x_discrete(limits = set4items$attrakdiff$varnames[rev_itemnr], #neworderedlevels,
                      labels = labels[rev_itemnr]) +
     scale_y_continuous(breaks = seq(-3, 3, 1)) + 
     coord_flip(xlim = c(0 - 1, length(unique(data2process$variable))) + 1,
