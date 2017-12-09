@@ -3,7 +3,8 @@
 
 sett_dat <- c()
 sett_dat$db_conn_name <- dbFindConnObj("Study-5")
-sett_dat$db_src_name <- "v_adtf_raw_every_100th_row"
+#sett_dat$db_src_name <- "v_adtf_raw_every_100th_row"
+sett_dat$db_src_name <- "t_adtf_raw_every_100th_row_v2"
 sett_dat$col_names$case <- "file_name"
 sett_dat$col_names$gps_lon <- "gps_lon"
 sett_dat$col_names$gps_lat <- "gps_lat"
@@ -79,7 +80,7 @@ plot_gps_paths_trip_nr <-
              alpha = 0.25) + 
   scale_colour_continuous(trans = 'reverse')
 
-windows(); plot(plot_gps_paths_trip_nr)
+#windows(); plot(plot_gps_paths_trip_nr)
 
 
 
@@ -138,8 +139,8 @@ windows(); plot(plot_gps_paths_trip_nr)
 
 # write to dat ------------------------------------------------------------
 
-dbWriteTable(get(sett_dat$db_conn_name), 
-             "dat_adtf_raw2_summary", 
-             dat_adtf_raw2_summary,
-             row.number = F,
-             overwrite = T)
+# dbWriteTable(get(sett_dat$db_conn_name), 
+#              "dat_adtf_raw2_summary", 
+#              dat_adtf_raw2_summary,
+#              row.number = F,
+#              overwrite = T)
