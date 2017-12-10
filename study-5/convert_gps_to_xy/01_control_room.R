@@ -1,90 +1,76 @@
 
-test <- conv.GPS2XY(dat_adtf_raw[, c("gps_lon", "gps_lat")],
+# V1: Translate coordinates using Harvestine ------------------------------
+
+## Load data for testing
+test <- dat_adtf_raw
+
+## Translate coordinates
+test_temp <- conv.GPS2XY(dat_adtf_raw[, c("gps_lon", "gps_lat")],
                     "gps_lon",
                     "gps_lat",
                     11.63825455,
                     48.07737816)
 
-test <- cbind(dat_adtf_raw, test[, c("x", "y")])
+## Complete data
+test <- cbind(test, test_temp[, c("x", "y")])
 
 
 
-# V2 ----------------------------------------------------------------------
+# V2: Translate coordinates using WHOI ------------------------------------
 
-test <- dat_adtf_raw
-coordinates(test) <- c("gps_lat", "gps_lon")
-proj4string(test) <- CRS("+proj=longlat +datum=WGS84")  ## for example
+## Load data for testing
+test2 <- dat_adtf_raw
 
-res <- spTransform(test, CRS("+proj=utm +zone=51 ellps=WGS84"))
-
-test <- res %>% data.frame()
-
-
-
-# 
-# r = 6371000 + alt
-# x = r*cos(lat)*cos(lon)
-# y = r*cos(lat)*sin(lon)
-# z = r*sin(lat)
-# 6378137
-# 
-# 
-# dat_adtf_raw$x2 <- 6378137 * cos(dat_adtf_raw$gps_lat*pi/180) * cos(dat_adtf_raw$gps_lon*pi/180)
-# dat_adtf_raw$y2 <- 6378137 * cos(dat_adtf_raw$gps_lat*pi/180) * sin(dat_adtf_raw$gps_lon*pi/180)
-# 
-# 
-# 
-# long1 = -71.02; lat1 = 42.33;
-# long2 = -73.94; lat2 = 40.66;
-# 
-# lat1 *=pi/180;
-# lat2 *=pi/180;
-# long1*=pi/180;
-# long2*=pi/180;
-# 
-# dlong = (long2 - long1);
-# dlat  = (lat2 - lat1);
-# 
-# // Haversine formula:
-#   R = 6371;
-# a = sin(dlat/2)*sin(dlat/2) + cos(lat1)*cos(lat2)*sin(dlong/2)*sin(dlong/2)
-# c = 2 * atan2( sqrt(a), sqrt(1-a) );
-# d = R * c;
-# 
-
-test_uniques <- dat_adtf_raw2_summary$
-  
-
-
-
-# V3 ----------------------------------------------------------------------
-
+## Settings for rotation angle
+param_angle <- 0 # no rotation
+param_angle <- -1.85 # taxiway will be parallel to x
 param_angle <- -1.85
 
-test <- dat_adtf_raw
-test$x <- 0
-test$y <- 0
-test[, c("x", "y")] <- 
-  apply(test[, c("gps_lon", "gps_lat")], 1, function(x) {
-  result <- translate(x["gps_lon"], x["gps_lat"],
-                      11.63825455, 48.07737816,
-                      #rotation_angle_degs = 0)
-                      rotation_angle_degs = param_angle)
-                      #rotation_angle_degs = 17) ## Taxiway will be parallel to X
-}) %>% bind_rows()
+## Create new variables
+test2$x <- 0
+test2$y <- 0
 
+## Translate coordinates
+test2[, c("x2", "y2")] <- 
+  apply(test2[, c("gps_lon", "gps_lat")], 1, function(x) {
+    result <- 
+      conv.gps2xy_byWHOI(x["gps_lon"], x["gps_lat"],
+                         11.63825455, 48.07737816, # reference coordinates
+                         rotation_angle_deg = param_angle)
+  }) %>% bind_rows()
+
+
+
+# Visualization -----------------------------------------------------------
 
 set.seed(42)
-ggplot() + 
-  ## Driver path
+
+## Plot drivers paths
+plot_paths <- 
+  ggplot() + 
   ggtitle(param_angle) + 
+  
   geom_path(data = test %>% 
               filter(file_name %in% sample(dat_adtf_raw2_summary$file_name, 10)),
             aes(x = x,
-            y = y,
-            group = file_name),
-            size = 1) + 
+                y = y,
+                group = file_name),
+            color = "grey85",
+            size = 1) +
   
+  geom_path(data = test2 %>% 
+              filter(file_name %in% sample(dat_adtf_raw2_summary$file_name, 10)),
+            aes(x = pos_x,
+                y = pos_y,
+                group = file_name),
+            size = 1)
+  
+plot(plot_paths)
+
+## Add additional points
+
+plot_paths_points <- 
+  plot_paths + 
   ## Parking vehicle
   geom_point(data = data.frame(X=1.4132504272460938e+02, Y=-2.5997845458984375e+02),
              aes(x = X,
@@ -122,3 +108,18 @@ ggplot() +
              aes(x = X,
                  y = Y),
              color= "red")
+
+
+plot(plot_paths_points)
+
+
+events <- dbGetSrc(dbFindConnObj("Study-5"), "t_coordinates_xy_events")
+events <- events %>% mutate(row_nr = row_number())
+
+
+plot_paths + 
+  geom_point(data = events,
+             aes(x = pos_x_conflict,
+                 y = pos_y_conflict,
+                 color = event_type)) + 
+  scale_color_manual(values = c("red1", "green3", "yellow3"))
