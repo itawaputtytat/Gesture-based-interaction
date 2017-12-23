@@ -78,3 +78,60 @@ conv.gps2xy_byWHOI(11.62683, 48.07223,
 
 conv.gps2xy_byWHOI(11.64465, 48.07593,
           11.63825455, 48.07737816)
+
+
+
+
+
+
+conv.xy2gps_byWHOI <- function(pos_x,
+                               pos_y,
+                               gps_lon_origin,
+                               gps_lat_origin,
+                               rotation_angle_deg = 0,
+                               xoffset_m = 0,
+                               yoffset_m = 0,
+                               return_only_lon = F,
+                               return_only_lat = F) {
+  
+  angle <- conv.deg2rad(rotation_angle_deg)
+  
+  xx = pos_x - xoffset_m
+  yy = pos_y - yoffset_m
+  r = sqrt(xx*xx + yy*yy)
+  
+  if(!is.nan(r)) {
+    #if(r) {
+    ct = xx/r;
+    st = yy/r;
+    xx = r * ( (ct * cos(angle)) + (st * sin(angle)) );
+    yy = r * ( (st * cos(angle)) - (ct * sin(angle)) );
+  }
+  
+  gps_lon = gps_lon_origin + xx / METERS_DEGLON(gps_lat_origin);
+  gps_lat = gps_lat_origin + yy / METERS_DEGLAT(gps_lat_origin);
+  
+  if (return_only_lon) {
+    return(gps_lon)
+  }
+  
+  if (return_only_lat) {
+    return(gps_lat)
+  }
+  
+  if (!return_only_lon & !return_only_lat) {
+    return(list(gps_lon = gps_lon, gps_lat = gps_lat))
+  }
+  
+}
+
+
+conv.gps2xy_byWHOI(11.62683, 48.07223,
+                   11.63825455, 48.07737816,
+                   0)
+
+conv.xy2gps_byWHOI(-851.3123, -572.4322,
+                   11.63825455, 48.07737816,
+                   0)
+
+

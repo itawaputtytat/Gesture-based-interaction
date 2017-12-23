@@ -2,6 +2,7 @@
 # Version info ------------------------------------------------------------
 
 library(puttytat4R)
+puttytat4R::.outputFunProc_status(F)
 outputSectionTitle("Project: Gesture-based interaction", char_aes = "#", sepline_char = "=")
 outputString("* Framework V3", type = "message")
 
@@ -22,7 +23,18 @@ outputString("Connecting to database ...")
 dbConnectOperator()
 outputDone(step = T)
 
-
+sourceWithEcho("fun/dbGetQuery_batch.R")
+sourceWithEcho("fun/dbCreateQueryString.R")
+sourceWithEcho("fun/createVector_var_sxx.R")
+sourceWithEcho("settings/sett_id_names.R")
+sourceWithEcho("fun/renameVar_sxx_exx.R")
+sourceWithEcho("fun/intrpldf_batch.R")
+sourceWithEcho("fun/deparseDataFunArg.R")
+library(dplyr)
+library(ggplot2)
+sourceWithEcho("fun/codePedalActivity.R")
+library(lazyeval)
+library(zoo)
 
 # 
 # # Data processing ---------------------------------------------------------

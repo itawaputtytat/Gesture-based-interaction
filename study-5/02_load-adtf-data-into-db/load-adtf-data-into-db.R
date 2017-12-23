@@ -2,7 +2,7 @@
 # Preparatory settings ----------------------------------------------------
 
 sett_dat <- c()
-sett_dat$dir_path <- file.path("F:", "_DATEN_ADTF")
+sett_dat$dir_path <- file.path("E:", "_DATEN_ADTF")
 sett_dat$file_name_pattern <- ".csv"
 sett_dat$db_conn_name <- dbFindConnObj("Study-5")
 sett_dat$src_name <- "t_adtf_raw"
@@ -46,11 +46,12 @@ for(subdirectory in dat_subdirectories) {
       dat_temp <- read.csv(file_path_temp, header = T, skip = 13, sep = ",")
       dat_temp$file_name <- file_name
       
-      ## Order by time and create row number per file
-      dat_temp <- 
-        dat_temp %>% 
-        arrange(Time) %>% 
-        mutate(row_nr = row_number())
+      ## Row numbers will now be computed within database
+      # ## Order by time and create row number per file
+      # dat_temp <- 
+      #   dat_temp %>% 
+      #   arrange(Time) %>% 
+      #   mutate(row_nr = row_number())
       
       dbWriteTable(get(sett_dat$db_conn_name),
                    sett_dat$src_name,
