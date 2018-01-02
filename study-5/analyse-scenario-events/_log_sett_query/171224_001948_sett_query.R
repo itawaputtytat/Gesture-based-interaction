@@ -6,22 +6,22 @@ sett_query <- c()
 sett_query$db_name <- "GBI_Study-5"
 sett_query$db_conn_name <- dbFindConnObj(sett_query$db_name, output = F)
 sett_query$src_name_prefix <- "t_adtf"
-sett_query$src_name_suffix <- "full"
+sett_query$src_name_suffix <- "full_tti_rnd1"
 sett_query$df_name_prefix <- "study5"
-#sett_query$sxx_exx <- "s01_e01" ## could be significant look for brake pressure bar > 3 and look for outliers
-# sett_query$sxx_exx <- "s01_e03" ## not s. (but can probably be fixed ;))
-#sett_query$sxx_exx <- "s02_e01" # not significant
-sett_query$sxx_exx <- "s02_e02" ## propably not significant
-#sett_query$sxx_exx <- "s03_e02" ## significant
-#sett_query$sxx_exx <- "s03_e03" ## not significant
-#sett_query$sxx_exx <- "s04_e02" ## not significant
-#sett_query$sxx_exx <- "s04_e03" # significant
+sett_query$sxx_exx <- "s01_e01"
+sett_query$sxx_exx <- "s01_e03" # geht nicht
+sett_query$sxx_exx <- "s02_e01"
+sett_query$sxx_exx <- "s02_e02"
+# sett_query$sxx_exx <- "s03_e02"
+# sett_query$sxx_exx <- "s03_e03"
+#sett_query$sxx_exx <- "s04_e02"
+#sett_query$sxx_exx <- "s04_e03"
 sett_query$subject <- c(500:600)
-sett_query$col_name_am_suffix <- "dti_m"
+sett_query$col_name_am_suffix <- "tti_s_rnd1"
 sett_query$col_name_am <- paste_("sxx_exx", sett_query$col_name_am_suffix)
-sett_query$am_limit1 <- -125
-sett_query$am_limit2 <- 25
-# sett_query$am_limit2 <- 5
+sett_query$am_limit1 <- -100
+sett_query$am_limit2 <- 5
+sett_query$am_limit2 <- 5
 sett_query$am_buffer <- 0
 sett_query$col_names_session <-
   c("subject_id",
@@ -58,4 +58,25 @@ sett_query$filter$bool_op_between <- c("AND")
 
 dbGetQuery_batch(sett_query$db_conn_name, sett_query, bind_rows = T)
 
+# dat_gps <- 
+#   dbGetQuery(get(sett_query$db_conn_name),
+#              "SELECT * FROM t_adtf_formatted WHERE file_name = 'Y_853313_20170630_160746_export.csv'")
+# 
+# plot_test <- 
+#   ggplot() + 
+#   geom_path(data = dat_gps,
+#             aes(x = gps_lon,
+#                 y = gps_lat))
 
+plot(plot_test)
+
+plot_test <- 
+  plot_test + 
+  geom_path(data = dat_study5_t_adtf_sxx_exx_exx_full_tti_rnd1,
+            aes(x = gps_lon,
+                y = gps_lat,
+                group = subject_id),
+            color = "red",
+            alpha = 0.35)
+
+plot(plot_test)

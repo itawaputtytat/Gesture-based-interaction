@@ -19,7 +19,7 @@ sett_query$sxx_exx <- "s02_e02" ## propably not significant
 sett_query$subject <- c(500:600)
 sett_query$col_name_am_suffix <- "dti_m"
 sett_query$col_name_am <- paste_("sxx_exx", sett_query$col_name_am_suffix)
-sett_query$am_limit1 <- -125
+sett_query$am_limit1 <- -75
 sett_query$am_limit2 <- 25
 # sett_query$am_limit2 <- 5
 sett_query$am_buffer <- 0

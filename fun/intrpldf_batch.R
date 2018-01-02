@@ -1,12 +1,12 @@
 intrpldf_batch <- function(dat,
-                              col_name_ref,
-                              col_name_group = "case",
-                              stepsize = 0.1,
-                              colnames2excl = NULL,
-                              binary_vars = NULL,
-                              outputFlag = F,
-                              suffix = "intrpld",
-                              replace_preceding = T) {
+                           col_name_ref,
+                           col_name_group = "case",
+                           stepsize = 0.1,
+                           colnames2excl = NULL,
+                           binary_vars = NULL,
+                           outputFlag = F,
+                           suffix = "intrpld",
+                           replace_preceding = T) {
   
   outputFunProc(R)
   
@@ -16,6 +16,7 @@ intrpldf_batch <- function(dat,
   
   col_name_ref_finder <- grep(col_name_ref, colnames(dat))
   col_name_ref <- colnames(dat)[col_name_ref_finder]
+  
   dat_intrpld <- 
     invisible( lapply(unique(dat[, col_name_group]), function(p) {
       
