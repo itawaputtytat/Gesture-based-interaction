@@ -8,30 +8,19 @@ sett_query$db_conn_name <- dbFindConnObj(sett_query$db_name, output = F)
 sett_query$src_name_prefix <- "t_adtf"
 sett_query$src_name_suffix <- "full"
 sett_query$df_name_prefix <- "study5"
-sett_query$sxx_exx <- "s01_e01" ## turning; break-rt s.; could be significant look for brake pressure bar >= 3 (or 7) and look for outliers
-sett_query$sxx_exx <- "s01_e03" ## single pedestrian; break-rt ns.
-sett_query$sxx_exx <- "s02_e01" ## cyclist left; break-rt ns.
-sett_query$sxx_exx <- "s02_e02" ## evasion; break-rt s.; significant when removing outliers (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e02" ## pedestrians; break-rt s.; (mostly no steering reaction) (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e03" ## merging; break rt ns.; (no steering reaction)
-sett_query$sxx_exx <- "s04_e02" ## cyclist right; break rt ns.;  (no steering reaction)
-sett_query$sxx_exx <- "s04_e03" ## backwards; break-rt s.(steering reaction n.s.)
-sett_query$am_limit1 <- -125
-sett_query$am_limit2 <- 25
-
-#sett_query$sxx_exx <- "s00_e01"
-#sett_query$sxx_exx <- "s00_e02"
-# sett_query$sxx_exx <- "s01_e02" # (dist looks good)
-# sett_query$sxx_exx <- "s02_e03" #significant
-# sett_query$sxx_exx <- "s03_e01" #significant (dist looks not so good; turning maneuver)
-# sett_query$sxx_exx <- "s04_e01" #significant (dist looks not so good)
-# sett_query$am_limit1 <- -150
-# sett_query$am_limit2 <- 300
-
+sett_query$sxx_exx <- "s01_e01" ## could be significant look for brake pressure bar > 3 and look for outliers
+# sett_query$sxx_exx <- "s01_e03" ## not s. (but can probably be fixed ;))
+#sett_query$sxx_exx <- "s02_e01" # not significant
+#sett_query$sxx_exx <- "s02_e02" ## significant when removing outliers
+#sett_query$sxx_exx <- "s03_e02" ## significant
+#sett_query$sxx_exx <- "s03_e03" ## not significant
+#sett_query$sxx_exx <- "s04_e02" ## not significant
+#sett_query$sxx_exx <- "s04_e03" # significant
 sett_query$subject <- c(500:600)
 sett_query$col_name_am_suffix <- "dti_m"
 sett_query$col_name_am <- paste_("sxx_exx", sett_query$col_name_am_suffix)
-
+sett_query$am_limit1 <- -125
+sett_query$am_limit2 <- 25
 # sett_query$am_limit2 <- 5
 sett_query$am_buffer <- 0
 sett_query$col_names_session <-
@@ -50,11 +39,7 @@ sett_query$col_names_data <-
     "itrace_acc_z",
     "acc_pedal_pos_perc",
     "brake_pressure_status",
-    "brake_pressure_bar",
-    "steer_angle_deg",
-    "steer_angle_deg_sign",
-    "steer_angle_speed_degs",
-    "itrace_yaw")
+    "brake_pressure_bar")
 
 sett_query$filter$sets <-
   list(

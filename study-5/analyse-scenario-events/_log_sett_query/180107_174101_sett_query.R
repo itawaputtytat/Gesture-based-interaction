@@ -9,13 +9,13 @@ sett_query$src_name_prefix <- "t_adtf"
 sett_query$src_name_suffix <- "full"
 sett_query$df_name_prefix <- "study5"
 sett_query$sxx_exx <- "s01_e01" ## turning; break-rt s.; could be significant look for brake pressure bar >= 3 (or 7) and look for outliers
-sett_query$sxx_exx <- "s01_e03" ## single pedestrian; break-rt ns.
-sett_query$sxx_exx <- "s02_e01" ## cyclist left; break-rt ns.
-sett_query$sxx_exx <- "s02_e02" ## evasion; break-rt s.; significant when removing outliers (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e02" ## pedestrians; break-rt s.; (mostly no steering reaction) (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e03" ## merging; break rt ns.; (no steering reaction)
-sett_query$sxx_exx <- "s04_e02" ## cyclist right; break rt ns.;  (no steering reaction)
-sett_query$sxx_exx <- "s04_e03" ## backwards; break-rt s.(steering reaction n.s.)
+#sett_query$sxx_exx <- "s01_e03" ## single pedestrian; break-rt s. when single-sided
+#sett_query$sxx_exx <- "s02_e01" ## cyclist left; break-rt ns.;
+#sett_query$sxx_exx <- "s02_e02" ## significant when removing outliers (significant steering angle speed for touch)
+#sett_query$sxx_exx <- "s03_e02" ## significant (mostly no steering reaction) (significant steering angle speed for touch)
+#sett_query$sxx_exx <- "s03_e03" ## not significant (no steering reaction)
+#sett_query$sxx_exx <- "s04_e02" ## cyclist right; break rt ns.;  (no steering reaction)
+#sett_query$sxx_exx <- "s04_e03" # significant (steering reaction n.s.)
 sett_query$am_limit1 <- -125
 sett_query$am_limit2 <- 25
 

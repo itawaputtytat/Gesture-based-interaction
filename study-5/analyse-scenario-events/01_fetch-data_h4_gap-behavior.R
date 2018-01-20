@@ -1,4 +1,3 @@
-writeSelfAsLog("sett_query")
 
 # Query settings ----------------------------------------------------------
 
@@ -7,29 +6,32 @@ sett_query$db_name <- "GBI_Study-5"
 sett_query$db_conn_name <- dbFindConnObj(sett_query$db_name, output = F)
 sett_query$src_name_prefix <- "t_adtf"
 sett_query$src_name_suffix <- "full"
+#sett_query$src_name_suffix <- "full_tti_rnd1"
 sett_query$df_name_prefix <- "study5"
-sett_query$sxx_exx <- "s01_e01" ## turning; break-rt s.; could be significant look for brake pressure bar >= 3 (or 7) and look for outliers
-sett_query$sxx_exx <- "s01_e03" ## single pedestrian; break-rt ns.
-sett_query$sxx_exx <- "s02_e01" ## cyclist left; break-rt ns.
-sett_query$sxx_exx <- "s02_e02" ## evasion; break-rt s.; significant when removing outliers (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e02" ## pedestrians; break-rt s.; (mostly no steering reaction) (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e03" ## merging; break rt ns.; (no steering reaction)
-sett_query$sxx_exx <- "s04_e02" ## cyclist right; break rt ns.;  (no steering reaction)
-sett_query$sxx_exx <- "s04_e03" ## backwards; break-rt s.(steering reaction n.s.)
-sett_query$am_limit1 <- -125
-sett_query$am_limit2 <- 25
 
-#sett_query$sxx_exx <- "s00_e01"
-#sett_query$sxx_exx <- "s00_e02"
-# sett_query$sxx_exx <- "s01_e02" # (dist looks good)
-# sett_query$sxx_exx <- "s02_e03" #significant
-# sett_query$sxx_exx <- "s03_e01" #significant (dist looks not so good; turning maneuver)
-# sett_query$sxx_exx <- "s04_e01" #significant (dist looks not so good)
-# sett_query$am_limit1 <- -150
-# sett_query$am_limit2 <- 300
+# sett_query$sxx_exx <- "s00_e01"
+# sett_query$sxx_exx <- "s00_e02"
+# sett_query$sxx_exx <- "s01_e02"
+# sett_query$sxx_exx <- "s02_e03" 
+# sett_query$sxx_exx <- "s03_e01" 
+# sett_query$sxx_exx <- "s04_e01" 
+
+sett_query$sxx_exx <- c(
+  "s00_e01",
+  "s00_e02",
+  "s01_e02",
+  "s02_e03",
+  "s03_e01",
+  "s04_e01"
+  )
+
+#sett_query$am_limit1 <- -150
+sett_query$am_limit1 <- -50
+sett_query$am_limit2 <- 100
 
 sett_query$subject <- c(500:600)
 sett_query$col_name_am_suffix <- "dti_m"
+# sett_query$col_name_am_suffix <- "tti_s_rnd1"
 sett_query$col_name_am <- paste_("sxx_exx", sett_query$col_name_am_suffix)
 
 # sett_query$am_limit2 <- 5
@@ -69,7 +71,8 @@ sett_query$filter$bool_op_between <- c("AND")
 
 
 
-# Data processing ---------------------------------------------------------
+
+# Data fetching -----------------------------------------------------------
 
 dbGetQuery_batch(sett_query$db_conn_name, sett_query, bind_rows = T)
 

@@ -12,10 +12,10 @@ sett_query$sxx_exx <- "s01_e01" ## turning; break-rt s.; could be significant lo
 sett_query$sxx_exx <- "s01_e03" ## single pedestrian; break-rt ns.
 sett_query$sxx_exx <- "s02_e01" ## cyclist left; break-rt ns.
 sett_query$sxx_exx <- "s02_e02" ## evasion; break-rt s.; significant when removing outliers (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e02" ## pedestrians; break-rt s.; (mostly no steering reaction) (significant steering angle speed for touch)
-sett_query$sxx_exx <- "s03_e03" ## merging; break rt ns.; (no steering reaction)
+sett_query$sxx_exx <- "s03_e02" ## significant (mostly no steering reaction) (significant steering angle speed for touch)
+sett_query$sxx_exx <- "s03_e03" ## not significant (no steering reaction)
 sett_query$sxx_exx <- "s04_e02" ## cyclist right; break rt ns.;  (no steering reaction)
-sett_query$sxx_exx <- "s04_e03" ## backwards; break-rt s.(steering reaction n.s.)
+sett_query$sxx_exx <- "s04_e03" # significant (steering reaction n.s.)
 sett_query$am_limit1 <- -125
 sett_query$am_limit2 <- 25
 

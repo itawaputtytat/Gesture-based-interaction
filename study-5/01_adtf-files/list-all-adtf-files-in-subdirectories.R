@@ -2,7 +2,7 @@
 # List all ADTF files -----------------------------------------------------
 
 dat_list <- 
-  list.files(path = "F:/_DATEN_ADTF/", 
+  list.files(path = "E:/_DATEN_ADTF/", 
              pattern = ".dat$", 
              recursive = TRUE)
 
@@ -39,9 +39,9 @@ dat_list$filename_short <-
          }
   )
 
-
-library(openxlsx)
-write.xlsx(dat_list, "adtf_csv-exports.xlsx")
+# 
+# library(openxlsx)
+# write.xlsx(dat_list, "adtf_csv-exports.xlsx")
 
 
         

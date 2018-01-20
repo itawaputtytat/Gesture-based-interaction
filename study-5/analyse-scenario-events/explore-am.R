@@ -1,10 +1,66 @@
 
+# Preparatory settings ----------------------------------------------------
+
+sett_proc <- c()
+sett_proc$scenario_id <- as.numeric(substr(sett_query$sxx_exx, 3, 3))
+sett_proc$event_id <- as.numeric(substr(sett_query$sxx_exx, 7, 7))
+
+
+
+# Load reference position -------------------------------------------------
+
+dat_gps_reference <- 
+  dbGetSrc(sett_query$db_conn_name,
+           "v_vtd_coordinates_gps_events_start") %>% 
+  filter(scenario_id == sett_proc$scenario_id & 
+           event_id == sett_proc$event_id)
+
+
+
+# Load map data for reference position ------------------------------------
+
+map <- 
+  get_map(c(dat_gps_reference$gps_lon, dat_gps_reference$gps_lat),
+          maptype = "satellite", 
+          zoom = 17)
+
+ggmap(map) + 
+  geom_point(data = dat_gps_reference,
+             aes(x = gps_lon,
+                 y = gps_lat),
+             color = "white") + 
+  geom_point(data = dat_study5_t_adtf_sxx_exx_exx_full_intrpld %>% 
+               filter(sxx_exx_dti_m == 0) %>% 
+               group_by(case) %>% 
+               summarize_all("max"),
+             aes(x = gps_lon,
+                 y = gps_lat,
+                 group = case),
+             color = "yellow",
+             alpha = 0.5) + 
+  geom_point(data = dat_study5_t_adtf_sxx_exx_exx_full_intrpld %>% 
+               filter(!usable) %>% 
+               filter(sxx_exx_dti_m == 0) %>% 
+               group_by(case) %>% 
+               summarize_all("max"),
+             aes(x = gps_lon,
+                 y = gps_lat,
+                 group = case),
+             color = "red",
+             alpha = 0.5)
+
+
+
+
 # Load exemplary gps path -------------------------------------------------
 
 dat_gps <-
   dbGetQuery(get(sett_query$db_conn_name),
-             #"SELECT * FROM t_adtf_formatted WHERE file_name = 'Y_853313_20170630_160746_export.csv'")
-             "SELECT * FROM t_adtf_s04_e03_gps_dist WHERE subject_id = 512 AND scenario_id = 4")
+             #"SELECT * FROM t_adtf_formatted WHERE file_name = 'Y_853313_20170619_083022_export.csv'")
+             "SELECT * FROM t_adtf_s00_e01_full WHERE subject_id = 526")
+             #"SELECT * FROM t_adtf_s00_e02_full WHERE subject_id = 512")
+             #"SELECT * FROM t_adtf_s00_e02_gps_dist WHERE subject_id = 512")
+             
 
 # dat_gps <- 
 #   dat_gps %>% 

@@ -14,10 +14,11 @@ sett_proc$col_name_am <- "sxx_exx_dti_m"
 sett_proc$col_name_dti <- "sxx_exx_dti_m"
 sett_proc$col_name_am_start <- paste0(sett_proc$col_name_am, "_start")
 sett_proc$col_name_am_end <- paste0(sett_proc$col_name_am, "_end")
-sett_proc$colname_id    <- "case"
-sett_proc$colname_group <- "condition_scenario"
+sett_proc$col_name_id    <- "case"
+sett_proc$colname_group <- "interaction_type"
 sett_proc$crit_am <- 0
 sett_proc$crit_am_last_acc_before_braking <- 0
+sett_proc$plot <- F
 
 sett_plot <- c()
 sett_plot$xlim_min <- sett_query$am_limit1
@@ -28,26 +29,38 @@ sett_plot$fill <- c("red2", "white", "green2")
 
 # Code pedal activity -----------------------------------------------------
 
-dat_pedal_act <- get(sett_proc$df_name)
+col_finder <- 
+  paste0("condition_scenario_t", 
+         substr(sett_query$sxx_exx, start = 3, 3))
 
-codePedalActivity(dat_pedal_act,
+dat_pedal <- 
+  get(sett_proc$df_name) %>% 
+  filter(is_usable) %>% 
+  data.frame()#%>% 
+  #mutate(condition_scenario = col_finder)
+
+unique_cases <- unique(dat_pedal$case)
+
+codePedalActivity(dat_pedal,
                   colname_acc_pedal_pos = "acc_pedal_pos_perc",
                   colname_brake_status = "brake_pressure_status",
-                  colname_brake_press = "brake_pressure_bar",
-                  colname_group = "case")
+                  colname_brake_press = "brake_pressure_bar")
 
 
 
 # Summarise pedal activity ------------------------------------------------
 
-dat_pedal_act_summary <- 
-  dat_pedal_act %>% 
+dat_pedal_summary <- 
+  dat_pedal %>% 
   ## Reduce pedal activity to starting arrival measure
-  group_by_(sett_proc$colname_id,
+  group_by_("sxx_exx",
+            sett_proc$col_name_id,
             sett_proc$colname_group,
             "pedal_act_id",
             "subject_id") %>%
   summarise_(.dots = c(
+    setNames(list(interp(~ min(var), var = as.name("tta_s")) ), 
+             "tta_s_min"),
     setNames(list(interp(~ min(var), var = as.name("time_s")) ), 
              "time_s_min"),
     setNames(list(interp(~ min(var), var = as.name("pedal_act")) ), 
@@ -60,10 +73,10 @@ dat_pedal_act_summary <-
              sett_proc$col_name_am_end)
   )) %>% 
   ## Arrange by id and arrival measure
-  arrange_(sett_proc$colname_id, 
+  arrange_(sett_proc$col_name_id, 
            sett_proc$col_name_am_start) %>% 
   ## Enumerate each type of pedal activity
-  group_by_(sett_proc$colname_id) %>% 
+  group_by_(sett_proc$col_name_id) %>% 
   mutate(pedal_act_nr = row_number()) 
 
 ## For lazyeval see:
@@ -71,10 +84,10 @@ dat_pedal_act_summary <-
 ## https://stackoverflow.com/questions/39252405/using-dplyr-summarise-in-r-with-dynamic-variable
 
 ## Merge data and pedal activity numeration
-dat_pedal_act <- 
-  left_join(dat_pedal_act,
-            dat_pedal_act_summary %>% 
-              select_(sett_proc$colname_id, 
+dat_pedal <- 
+  left_join(dat_pedal,
+            dat_pedal_summary %>% 
+              select_(sett_proc$col_name_id, 
                       "pedal_act_id", 
                       "pedal_act_nr"))
 
@@ -123,199 +136,361 @@ plot_pedalActSeq <- function(dat,
   
 }
 
-plot_pedal_act <- 
-  plot_pedalActSeq(dat_pedal_act, 
+plot_pedal <- 
+  plot_pedalActSeq(dat_pedal, 
                    varname_x = sett_proc$col_name_am,
-                   varname_y = "subject_id",
-                   varname_facet_row = "condition_scenario",
+                   varname_y = sett_proc$col_name_id,
+                   varname_facet_row = "interaction_type",
                    sett_plot)
 
-windows(); plot(plot_pedal_act)
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal)
+}
 
 
 
-# Find last accelerating activity -----------------------------------------
+# Find last braking activity before threshold -----------------------------
 
-dat_pedal_act_acc_last <- 
-  dat_pedal_act_summary %>% 
-  group_by_(sett_proc$colname_id) %>% 
-  ## Filter for accelerating activity
-  filter(pedal_act == 1) %>% 
-  ## Filter for distance criteria:
-  ## Activity begins after critical distance OR
-  ## ... begins before but ends after
-  filter_( paste(
-    sett_proc$col_name_am_start, ">=", sett_proc$crit_am, "|",
-    "(", sett_proc$col_name_am_start, "<=", sett_proc$crit_am, "&",
-    sett_proc$col_name_am_end, ">=", sett_proc$crit_am, ")") ) %>% 
-  ## In case of multiple accleration activites
-  summarise_all(min) %>% 
-  ## Complete data for all passings
-  right_join( dat_pedal_act_summary %>% 
-                distinct_(sett_proc$colname_id,
-                          sett_proc$colname_group) ) %>% 
-  rename(pedal_act_nr_acc_last = pedal_act_nr) %>% 
-  data.frame()
+dat_pedal_summary_last_braking_before_threshold <- 
+  dat_pedal_summary %>% 
+  filter(pedal_act == -1) %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  filter_(paste(sett_proc$col_name_am_start, "<=", sett_proc$crit_am)) %>% 
+  filter(pedal_act_nr == max(pedal_act_nr)) %>% 
+  rename(pedal_act_nr_last_braking_before_threshold = pedal_act_nr)
 
-
-## Merge data and pedal activity number of last acceleration activity
-dat_pedal2 <-
-  left_join(dat_pedal_act,
-            dat_pedal_act_acc_last %>% 
-              select_(sett_proc$colname_id, "pedal_act_nr_acc_last"),
-            by = sett_proc$colname_id)
+## Merge with full data
+dat_pedal <-
+  left_join(dat_pedal,
+            dat_pedal_summary_last_braking_before_threshold %>% 
+              select_(sett_proc$col_name_id, 
+                      "pedal_act_nr_last_braking_before_threshold"),
+            by = sett_proc$col_name_id)
 
 ## Order sequences
-dat_pedal_act_acc_last_order <- 
-  dat_pedal_act_acc_last %>% 
-  arrange_(sett_proc$colname_group, sett_proc$col_name_am_start) %>% 
+dat_pedal_summary_last_braking_before_threshold_order <- 
+  dat_pedal_summary_last_braking_before_threshold %>% 
+  arrange_(sett_proc$colname_group, 
+           sett_proc$col_name_am_start) %>% 
   ungroup() %>% 
-  select_(sett_proc$colname_id) %>% 
+  select_(sett_proc$col_name_id) %>% 
   pull() %>% 
   rev()
 
-dat_pedal2[, sett_proc$colname_id] <- 
-  factor(dat_pedal2[, sett_proc$colname_id], 
-         levels = unique(dat_pedal_act_acc_last_order))
+## Capture missing cases
+finder <- 
+  unique_cases %in% 
+  dat_pedal_summary_last_braking_before_threshold_order
+
+dat_pedal_summary_last_braking_before_threshold_order <- 
+  c(dat_pedal_summary_last_braking_before_threshold_order,
+    unique_cases[!finder])
+
+dat_pedal[, sett_proc$col_name_id] <- 
+  factor(dat_pedal[, sett_proc$col_name_id], 
+         levels = dat_pedal_summary_last_braking_before_threshold_order)
 
 
 
-# Visualise acceleration activity after threshold -------------------------
+# Visualize last braking activity before threshold ------------------------
 
-plot_pedal_act_acc_last <- 
-  plot_pedalActSeq(dat_pedal2, 
+plot_pedal_last_braking_before_threshold <- 
+  plot_pedalActSeq(dat_pedal, 
                    varname_x = sett_proc$col_name_am,
-                   varname_y = sett_proc$colname_id,
+                   varname_y = sett_proc$col_name_id,
                    varname_facet_row = sett_proc$colname_group,
                    sett_plot,
-                   fill_nr_to_grey = 3)
+                   fill_nr_to_grey = 1)
 
-plot_pedal_act_acc_last <- 
-  plot_pedal_act_acc_last + 
+plot_pedal_last_braking_before_threshold <- 
+  plot_pedal_last_braking_before_threshold + 
   geom_tile(data = 
-              dat_pedal2 %>% 
-              filter(pedal_act_nr == pedal_act_nr_acc_last),
+              dat_pedal %>% 
+              filter(pedal_act_nr == pedal_act_nr_last_braking_before_threshold),
             aes_string(x = sett_proc$col_name_am,
-                       y = sett_proc$colname_id),
+                       y = sett_proc$col_name_id),
             #fill = "factor(pedal_act)"),
-            fill = "green2")
+            fill = "red2")
 
 plot_title_txt <- 
   paste(paste0(sett_plot$file_name_prefix, ": "),
-        "Pedal activity sequences with identified acceleration after",
-        sett_proc$crit_am)
+        "Last braking activity before threshold")
 
-plot_pedal_act_acc_last <- plot_pedal_act_acc_last + ggtitle(plot_title_txt)
-
-windows(); plot(plot_pedal_act_acc_last)
-
-
-# Find last previous accelerating before braking --------------------------
-
-dat_pedal_act_acc_last_before_brake <-
-  left_join(dat_pedal_act_summary,
-            dat_pedal_act_acc_last %>%
-              select_(sett_proc$colname_id,
-                      "pedal_act_nr_acc_last"))
-
-# ## Identify accelerating activity after critical distance
-rowfinder <-
-  which(dat_pedal_act_acc_last_before_brake[, "pedal_act"] == -1 &
-          dat_pedal_act_acc_last_before_brake[, sett_proc$col_name_am_start] <= sett_proc$crit_am)
-dat_pedal_act_acc_last_before_brake$pedal_act_nr_break_max <- NA
-dat_pedal_act_acc_last_before_brake$pedal_act_nr_break_max[rowfinder] <- 
-  dat_pedal_act_acc_last_before_brake$pedal_act_nr[rowfinder]
-
-
-# ## Find pedal activity number of first braking
-dat_pedal_act_acc_last_before_brake <-
-  dat_pedal_act_acc_last_before_brake %>%
-  group_by_(sett_proc$colname_id) %>%
-  mutate(pedal_act_nr_break_max = max(pedal_act_nr_break_max, na.rm = T)) %>%
-  ## Filter
-  filter(pedal_act == 1 & pedal_act_nr < pedal_act_nr_break_max) %>%
-  filter_(paste(sett_proc$col_name_am_start, "<=", 
-                sett_proc$crit_am_last_acc_before_braking)) %>% 
-  #filter(pxx_dist_m_rnd1_pedal_act_end < 0) %>%
-  ## In case of multiple accleration activites
-  summarise_all(max) %>%
-  ## Complete data for all passings
-  right_join( dat_pedal_act_summary %>%
-                distinct_(sett_proc$colname_id,
-                          sett_proc$colname_group) ) %>%
-  rename(pedal_act_nr_acc_last_before_brake = pedal_act_nr) %>%
-  data.frame()
-
-
-## Merge data and last previous acclerating activity before braking
-dat_pedal3 <-
-  left_join(dat_pedal2,
-            dat_pedal_act_acc_last_before_brake %>% 
-              select_(sett_proc$colname_id, 
-                      "pedal_act_nr_acc_last_before_brake"),
-            by = sett_proc$colname_id)
-
-
-## Order sequences
-dat_pedal_act_acc_last_before_brake_order <- 
-  dat_pedal_act_acc_last_before_brake %>% 
-  arrange_(sett_proc$colname_group, sett_proc$col_name_am_end) %>% 
-  ungroup() %>% 
-  select_(sett_proc$colname_id) %>% 
-  pull() %>% 
-  rev()
-
-dat_pedal3[, sett_proc$colname_id] <- 
-  factor(dat_pedal3[, sett_proc$colname_id], 
-         levels = unique(dat_pedal_act_acc_last_before_brake_order))
-
-
-
-# Visualise last acceleration activity before braking ---------------------
-
-plot_pedal_act_acc_last_before_brake <- 
-  plot_pedalActSeq(dat_pedal3, 
-                   varname_x = sett_proc$col_name_am,
-                   varname_y = sett_proc$colname_id,
-                   varname_facet_row = sett_proc$colname_group,
-                   sett_plot,
-                   fill_nr_to_grey = 3)
-
-plot_pedal_act_acc_last_before_brake <- 
-  plot_pedal_act_acc_last_before_brake + 
-  geom_tile(data = 
-              dat_pedal3 %>% 
-              filter(pedal_act_nr == pedal_act_nr_acc_last_before_brake),
-            aes_string(x = sett_proc$col_name_am,
-                       y = sett_proc$colname_id),
-            #fill = "factor(pedal_act)"),
-            fill = "green2")
-
-plot_title_txt <- 
-  paste(paste0(sett_plot$file_name_prefix, ": "),
-        "Release acceleration pedal")
-
-plot_pedal_act_acc_last_before_brake <- 
-  plot_pedal_act_acc_last_before_brake + 
+plot_pedal_last_braking_before_threshold <- 
+  plot_pedal_last_braking_before_threshold + 
   ggtitle(plot_title_txt)
 
-#windows(); plot(plot_pedal_act_acc_last_before_brake)
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal_last_braking_before_threshold)
+}
 
 
-# Visualise evolution of releasing acceleration pedal ---------------------
 
-dat_pedal_act_acc_last_before_brake_end_evo <-
-  dat_pedal_act_acc_last_before_brake %>%
-  select_(sett_proc$colname_id,
+# Find first acceleration after braking -----------------------------------
+
+dat_pedal_summary_first_acc_after_braking <-
+  left_join(dat_pedal_summary,
+            dat_pedal_summary_last_braking_before_threshold %>%
+              select_(sett_proc$col_name_id,
+                      "pedal_act_nr_last_braking_before_threshold")) %>% 
+  filter(pedal_act == 1) %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  filter(pedal_act_nr > pedal_act_nr_last_braking_before_threshold) %>% 
+  filter(pedal_act_nr == min(pedal_act_nr)) %>% 
+  rename(pedal_act_nr_first_acc_after_braking = pedal_act_nr)
+
+## Merge with full data
+dat_pedal <-
+  left_join(dat_pedal,
+            dat_pedal_summary_first_acc_after_braking %>% 
+              select_(sett_proc$col_name_id, 
+                      "pedal_act_nr_first_acc_after_braking"),
+            by = sett_proc$col_name_id)
+
+## Order sequences
+dat_pedal_summary_first_acc_after_braking_order <- 
+  dat_pedal_summary_first_acc_after_braking %>% 
+  arrange_(sett_proc$colname_group, 
+           sett_proc$col_name_am_start) %>% 
+  ungroup() %>% 
+  select_(sett_proc$col_name_id) %>% 
+  pull() %>% 
+  rev()
+
+## Capture missing cases
+finder <- 
+  unique_cases %in% 
+  dat_pedal_summary_first_acc_after_braking_order
+
+dat_pedal_summary_first_acc_after_braking_order <- 
+  c(dat_pedal_summary_first_acc_after_braking_order,
+    unique_cases[!finder])
+
+dat_pedal[, sett_proc$col_name_id] <- 
+  factor(dat_pedal[, sett_proc$col_name_id], 
+         levels = dat_pedal_summary_first_acc_after_braking_order)
+
+
+
+# Visualize first acceleration after braking ------------------------------
+
+plot_pedal_first_acc_after_braking <- 
+  plot_pedalActSeq(dat_pedal, 
+                   varname_x = sett_proc$col_name_am,
+                   varname_y = sett_proc$col_name_id,
+                   varname_facet_row = sett_proc$colname_group,
+                   sett_plot,
+                   fill_nr_to_grey = 1)
+
+plot_pedal_first_acc_after_braking <- 
+  plot_pedal_first_acc_after_braking + 
+  geom_tile(data = 
+              dat_pedal %>% 
+              filter(pedal_act_nr == pedal_act_nr_first_acc_after_braking),
+            aes_string(x = sett_proc$col_name_am,
+                       y = sett_proc$col_name_id),
+            #fill = "factor(pedal_act)"),
+            fill = "green2")
+
+plot_title_txt <- 
+  paste(paste0(sett_plot$file_name_prefix, ": "),
+        "First acceleration activity before threshold")
+
+plot_pedal_first_acc_after_braking <- 
+  plot_pedal_first_acc_after_braking + 
+  ggtitle(plot_title_txt)
+
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal_first_acc_after_braking)
+}
+
+
+
+# Find last acceleration activity before braking --------------------------
+
+dat_pedal_summary_last_acc_before_braking <-
+  left_join(dat_pedal_summary,
+            dat_pedal_summary_last_braking_before_threshold %>%
+              select_(sett_proc$col_name_id,
+                      "pedal_act_nr_last_braking_before_threshold")) %>% 
+  filter(pedal_act == 1) %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  filter_(paste(sett_proc$col_name_am_start, "<=", sett_proc$crit_am, "&",
+           "pedal_act_nr", "<", "pedal_act_nr_last_braking_before_threshold")) %>% 
+  filter(pedal_act_nr == max(pedal_act_nr)) %>% 
+  rename(pedal_act_nr_last_acc_before_braking = pedal_act_nr)
+
+## Merge with full data
+dat_pedal <-
+  left_join(dat_pedal,
+            dat_pedal_summary_last_acc_before_braking %>% 
+              select_(sett_proc$col_name_id, 
+                      "pedal_act_nr_last_acc_before_braking"),
+            by = sett_proc$col_name_id)
+
+## Order sequences
+dat_pedal_summary_last_acc_before_braking_order <- 
+  dat_pedal_summary_last_acc_before_braking %>% 
+  arrange_(sett_proc$colname_group, 
+           sett_proc$col_name_am_end) %>% 
+  ungroup() %>% 
+  select_(sett_proc$col_name_id) %>% 
+  pull() %>% 
+  rev()
+
+## Capture missing cases
+finder <- 
+  unique_cases %in% 
+  dat_pedal_summary_last_acc_before_braking_order
+
+dat_pedal_summary_last_acc_before_braking_order <- 
+  c(dat_pedal_summary_last_acc_before_braking_order,
+    unique_cases[!finder])
+
+dat_pedal[, sett_proc$col_name_id] <- 
+  factor(dat_pedal[, sett_proc$col_name_id], 
+         levels = dat_pedal_summary_last_acc_before_braking_order)
+
+
+
+# Visualize last acceleration activity before braking ---------------------
+
+plot_pedal_last_acc_before_braking <- 
+  plot_pedalActSeq(dat_pedal, 
+                   varname_x = sett_proc$col_name_am,
+                   varname_y = sett_proc$col_name_id,
+                   varname_facet_row = sett_proc$colname_group,
+                   sett_plot,
+                   fill_nr_to_grey = 1)
+
+plot_pedal_last_acc_before_braking <- 
+  plot_pedal_last_acc_before_braking + 
+  geom_tile(data = 
+              dat_pedal %>% 
+              filter(pedal_act_nr == pedal_act_nr_last_acc_before_braking),
+            aes_string(x = sett_proc$col_name_am,
+                       y = sett_proc$col_name_id),
+            #fill = "factor(pedal_act)"),
+            fill = "green2")
+
+plot_title_txt <- 
+  paste(paste0(sett_plot$file_name_prefix, ": "),
+        "Last acceleration activity before braking")
+
+plot_pedal_last_acc_before_braking <- 
+  plot_pedal_last_acc_before_braking + 
+  ggtitle(plot_title_txt)
+
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal_last_acc_before_braking)
+}
+
+
+
+# Find beginning of braking sequence --------------------------------------
+
+dat_pedal_summary_braking <-
+  left_join(dat_pedal_summary,
+            dat_pedal_summary_last_acc_before_braking %>%
+              select_(sett_proc$col_name_id,
+                      "pedal_act_nr_last_acc_before_braking")) %>% 
+  filter(pedal_act == -1) %>%
+  filter_(paste(sett_proc$col_name_am_start, "<=", sett_proc$crit_am)) %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  ## In case there is no preceding acceleration activity
+  mutate(pedal_act_nr_last_acc_before_braking = 
+           pedal_act_nr_last_acc_before_braking) %>% 
+  mutate(pedal_act_nr_last_acc_before_braking = 
+           ifelse(is.na(pedal_act_nr_last_acc_before_braking),
+                  -999,
+                  pedal_act_nr_last_acc_before_braking)) %>% 
+  filter(pedal_act_nr > pedal_act_nr_last_acc_before_braking) %>% 
+  mutate(pedal_act_nr_braking_first = min(pedal_act_nr))
+
+dat_pedal_summary_braking_first <- 
+  dat_pedal_summary_braking %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  filter(pedal_act_nr == min(pedal_act_nr))
+
+## Merge with full data
+dat_pedal <-
+  left_join(dat_pedal,
+            dat_pedal_summary_braking_first %>% 
+              select_(sett_proc$col_name_id, 
+                      "pedal_act_nr_braking_first"),
+            by = sett_proc$col_name_id)
+
+## Order sequences
+dat_pedal_summary_braking_first_order <- 
+  dat_pedal_summary_braking_first %>% 
+  group_by_(sett_proc$col_name_id) %>% 
+  arrange_(sett_proc$colname_group, 
+           sett_proc$col_name_am_start) %>% 
+  ungroup() %>% 
+  select_(sett_proc$col_name_id) %>% 
+  pull() %>% 
+  rev()
+
+## Capture missing cases
+finder <- 
+  unique_cases %in% 
+  dat_pedal_summary_braking_first_order
+
+dat_pedal_summary_braking_first_order <- 
+  c(unique_cases[!finder],
+    dat_pedal_summary_braking_first_order)
+
+dat_pedal[, sett_proc$col_name_id] <- 
+  factor(dat_pedal[, sett_proc$col_name_id], 
+         levels = dat_pedal_summary_braking_first_order)
+
+
+
+# Visualize beginning of braking sequence ---------------------------------
+
+plot_pedal_braking_first <- 
+  plot_pedalActSeq(dat_pedal, 
+                   varname_x = sett_proc$col_name_am,
+                   varname_y = sett_proc$col_name_id,
+                   varname_facet_row = sett_proc$colname_group,
+                   sett_plot,
+                   fill_nr_to_grey = 3)
+
+plot_pedal_braking_first <- 
+  plot_pedal_braking_first + 
+  geom_tile(data = 
+              dat_pedal %>% 
+              filter(pedal_act_nr == pedal_act_nr_braking_first),
+            aes_string(x = sett_proc$col_name_am,
+                       y = sett_proc$col_name_id),
+            #fill = "factor(pedal_act)"),
+            fill = "red2")
+
+plot_title_txt <- 
+  paste(paste0(sett_plot$file_name_prefix, ": "),
+        "Beginning of braking sequence")
+
+plot_pedal_braking_first <- 
+  plot_pedal_braking_first + 
+  ggtitle(plot_title_txt)
+
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal_braking_first)
+}
+
+
+
+# Compute evolution of releasing acceleration pedal -----------------------
+
+dat_pedal_release_acc_before_braking_evo <-
+  dat_pedal_summary_last_acc_before_braking %>%
+  select_(sett_proc$col_name_id,
           sett_proc$colname_group,
           sett_proc$col_name_am_end) %>% 
-  mutate_(.dots = setNames(list(interp(~ replace(var, is.na(var), min(var, na.rm = T)),
-                                       var = as.name(sett_proc$col_name_am_end))),
-                           sett_proc$col_name_am_end)) %>% 
-  # pxx_dist_m_rnd1_pedal_act_end = 
-  #        replace(pxx_dist_m_rnd1_pedal_act_end,
-  #                is.na(pxx_dist_m_rnd1_pedal_act_end), 
-  #                min(pxx_dist_m_rnd1_pedal_act_end, na.rm = T))) %>% 
+  mutate_(.dots = setNames(
+    list(interp(~ replace(var, is.na(var), min(var, na.rm = T)),
+                var = as.name(sett_proc$col_name_am_end))),
+    sett_proc$col_name_am_end)) %>% 
   group_by_(sett_proc$colname_group) %>%
   arrange_(sett_proc$col_name_am_end) %>%
   mutate(percentage = row_number() / max(row_number()) * 100) %>% 
@@ -325,22 +500,24 @@ dat_pedal_act_acc_last_before_brake_end_evo <-
   data.frame()
 
 
-dat_pedal_act_acc_last_before_brake_end_evo <- 
-  lapply(unique(dat_pedal_act_acc_last_before_brake_end_evo[, sett_proc$colname_group]), function(x) {
+dat_pedal_release_acc_before_braking_evo <- 
+  lapply(unique(dat_pedal_release_acc_before_braking_evo[, sett_proc$colname_group]), function(x) {
     
-    dat <- dat_pedal_act_acc_last_before_brake_end_evo
-    dat <- dat[dat[, sett_proc$colname_group] == x, ]
+    dat <- dat_pedal_release_acc_before_braking_evo
+    row_finder <- dat[, sett_proc$colname_group] == x
+    dat <- dat[row_finder, ]
     
     dat <-
       intrpldf(dat %>% data.frame(),
                colname4ref = sett_proc$col_name_am_end,
-               min = min(unique(dat_pedal_act[, sett_proc$col_name_am])),
-               max = max(unique(dat_pedal_act[, sett_proc$col_name_am])),
+               min = min(unique(dat_pedal[, sett_proc$col_name_am])),
+               max = max(unique(dat_pedal[, sett_proc$col_name_am])),
                stepsize = 0.1,
                colnames2excl = "percentage",
                replace_preceding = T)
     
     dat$percentage <- na.locf(dat$percentage, na.rm = F)
+    
     ## Replace NA with min percentage
     dat <-
       dat %>%
@@ -354,9 +531,13 @@ dat_pedal_act_acc_last_before_brake_end_evo <-
     
   }) %>% bind_rows()
 
-plot_pedal_act_acc_last_before_brake_end_evo <- 
+
+
+# Visualise evolution of releasing acceleration pedal ---------------------
+
+plot_pedal_release_acc_before_braking_evo <- 
   ggplot() +
-  geom_line(data = dat_pedal_act_acc_last_before_brake_end_evo,
+  geom_line(data = dat_pedal_release_acc_before_braking_evo,
             aes_string(x = sett_proc$col_name_am_end,
                        y = "percentage",
                        colour = sett_proc$colname_group)) + 
@@ -371,93 +552,19 @@ plot_pedal_act_acc_last_before_brake_end_evo <-
   theme_bw() + 
   theme(strip.text.y = element_text(angle=0))
 
-#windows(); plot(plot_pedal_act_acc_last_before_brake_end_evo)
+if (sett_proc$plot) {
+  # windows(); plot(plot_pedal_release_acc_before_braking_evo)
+}
 
 
 
-# Find first braking activity ---------------------------------------------
+# Compute evolution of first breaking activity ----------------------------
 
-dat_pedal_act_break_first <- 
-  left_join(dat_pedal_act_summary,
-            dat_pedal_act_acc_last_before_brake %>% 
-              select_(sett_proc$colname_id, 
-                      "pedal_act_nr_acc_last_before_brake")) %>% 
-  filter(pedal_act == -1) %>% 
-  filter(pedal_act_nr > pedal_act_nr_acc_last_before_brake |
-           is.na(pedal_act_nr_acc_last_before_brake)) %>% 
-  ## In case of multiple braking activites
-  summarise_all(min) %>% 
-  ## Complete data for all passings
-  right_join( dat_pedal_act_summary %>% 
-                distinct_(sett_proc$colname_id,
-                          sett_proc$colname_group) ) %>% 
-  rename(pedal_act_nr_brake_first = pedal_act_nr) %>% 
-  data.frame()
-
-
-## Merge data and last previous acclerating activity before braking
-dat_pedal4 <-
-  left_join(dat_pedal3,
-            dat_pedal_act_break_first %>% 
-              select_(sett_proc$colname_id, 
-                      "pedal_act_nr_brake_first"),
-            by = sett_proc$colname_id)
-
-## Order sequences
-dat_pedal_act_break_first_order <- 
-  dat_pedal_act_break_first %>% 
-  arrange_(sett_proc$colname_group, sett_proc$col_name_am_start) %>% 
-  ungroup() %>% 
-  select_(sett_proc$colname_id) %>% 
-  pull() %>% 
-  rev()
-
-
-dat_pedal4[, sett_proc$colname_id] <- 
-  factor(dat_pedal4[, sett_proc$colname_id], 
-         levels = unique(dat_pedal_act_break_first_order))
-
-
-
-# Visualise first braking activity ----------------------------------------
-
-plot_pedal_act_brake_first <- 
-  plot_pedalActSeq(dat_pedal4, 
-                   varname_x = sett_proc$col_name_am,
-                   varname_y = sett_proc$colname_id,
-                   varname_facet_row = sett_proc$colname_group,
-                   sett_plot,
-                   fill_nr_to_grey = 1)
-
-plot_pedal_act_brake_first <- 
-  plot_pedal_act_brake_first + 
-  geom_tile(data = 
-              dat_pedal4 %>% 
-              filter(pedal_act_nr == pedal_act_nr_brake_first),
-            aes_string(x = sett_proc$col_name_am,
-                       y = sett_proc$colname_id),
-            #fill = "factor(pedal_act)"),
-            fill = "red2")
-
-plot_title_txt <- 
-  paste(paste0(sett_plot$file_name_prefix, ": "),
-        "First braking activity")
-
-plot_pedal_act_brake_first <- 
-  plot_pedal_act_brake_first + 
-  ggtitle(plot_title_txt)
-
-windows(); plot(plot_pedal_act_brake_first)
-
-
-
-# Visualise evolution of braking activity ---------------------------------
-
-dat_pedal_act_break_first_evo <-
-  dat_pedal_act_break_first %>%
+dat_pedal_braking_first_evo <-
+  dat_pedal_summary_braking_first %>%
   group_by_(sett_proc$colname_group) %>%
   arrange_(sett_proc$colname_group, sett_proc$col_name_am_start) %>%
-  select_(sett_proc$colname_id, 
+  select_(sett_proc$col_name_id, 
           sett_proc$colname_group, 
           sett_proc$col_name_am_start) %>% 
   mutate(percentage = row_number() / max(row_number()) * 100) %>% 
@@ -466,17 +573,18 @@ dat_pedal_act_break_first_evo <-
   summarise(percentage = max(percentage)) %>% 
   data.frame()
 
-dat_pedal_act_break_first_evo <- 
-  lapply(unique(dat_pedal_act_break_first_evo[, sett_proc$colname_group]), function(x) {
+dat_pedal_braking_first_evo <- 
+  lapply(unique(dat_pedal_braking_first_evo[, sett_proc$colname_group]), function(x) {
     
-    dat <- dat_pedal_act_break_first_evo
-    dat <- dat[dat[, sett_proc$colname_group] == x, ]
+    dat <- dat_pedal_braking_first_evo
+    row_finder <- dat[, sett_proc$colname_group] == x
+    dat <- dat[row_finder, ]
     
     dat <-
       intrpldf(dat %>% data.frame(),
                colname4ref = sett_proc$col_name_am_start,
-               min = min(unique(dat_pedal_act[, sett_proc$col_name_am])),
-               max = max(unique(dat_pedal_act[, sett_proc$col_name_am])),
+               min = min(unique(dat_pedal[, sett_proc$col_name_am])),
+               max = max(unique(dat_pedal[, sett_proc$col_name_am])),
                stepsize = 0.1,
                colnames2excl = "percentage",
                replace_preceding = T)
@@ -489,9 +597,12 @@ dat_pedal_act_break_first_evo <-
   }) %>% bind_rows()
 
 
-plot_pedal_act_break_first_evo <- 
+
+# Visualise evolution of first braking activity ---------------------------
+
+plot_pedal_braking_first_evo <- 
   ggplot() +
-  geom_line(data = dat_pedal_act_break_first_evo,
+  geom_line(data = dat_pedal_braking_first_evo,
             aes_string(x = sett_proc$col_name_am_start,
                        y = "percentage",
                        colour = sett_proc$colname_group)) + 
@@ -506,20 +617,22 @@ plot_pedal_act_break_first_evo <-
   theme_bw() + 
   theme(strip.text.y = element_text(angle=0)) 
 
-#windows(); plot(plot_pedal_act_break_first_evo)
+if (sett_proc$plot) {
+  # windows(); plot(plot_pedal_braking_first_evo)
+}
 
 
 
 # Combine evolution of last rolling and braking activity ------------------
 
-plot_pedal_act_evo <- 
+plot_pedal_evo <- 
   ggplot() +
-  geom_line(data = dat_pedal_act_acc_last_before_brake_end_evo,
+  geom_line(data = dat_pedal_release_acc_before_braking_evo,
             aes_string(x = sett_proc$col_name_am_end,
                        y = "percentage",
                        colour = sett_proc$colname_group),
             linetype = "dashed") +
-  geom_line(data = dat_pedal_act_break_first_evo,
+  geom_line(data = dat_pedal_braking_first_evo,
             aes_string(x = sett_proc$col_name_am_start,
                        y = "percentage",
                        colour = sett_proc$colname_group)) +
@@ -532,7 +645,9 @@ plot_pedal_act_evo <-
   ggtitle(paste(paste0(sett_plot$file_name_prefix, ": "),
                 "Evolution of pedal activity")) + 
   theme_bw() + 
-  theme(strip.text.y = element_text(angle=0)) +
-  coord_cartesian(xlim = c(-50, 5))
+  theme(strip.text.y = element_text(angle=0)) #+
+#coord_cartesian(xlim = c(-50, 5))
 
-windows(); plot(plot_pedal_act_evo)
+if (sett_proc$plot) {
+  windows(); plot(plot_pedal_evo)
+}
