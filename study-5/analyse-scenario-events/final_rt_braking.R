@@ -38,7 +38,7 @@ dat <-
   mutate(condition_scenario = 
            factor(condition_scenario, 
                   levels = c("gesture", "touch"), 
-                  labels = c("GBI", "TBI"))) %>% 
+                  labels = c("Gesture", "Touch"))) %>% 
   mutate(scenario = 
            factor(scenario,
                   levels = c("turning", "evasion", "pedestrian", "reverse"),
@@ -73,7 +73,7 @@ plot_rt_break <-
                         group = "scenario",
                         color = "condition_scenario",
                         linetype = "condition_scenario"),
-             size = 0.35) +
+             size = 0.5) +
   # stat_boxplot(data = dat_ssq_t1_t2_scores_long,
   #              aes_string(x = "tx",
   #                         y = "score",
@@ -91,9 +91,9 @@ plot_rt_break <-
              position = position_jitter(w = 0.1, h = 0)) +
   facet_grid(.~scenario) + 
   coord_cartesian(ylim = c(0, 2.5)) +
-  scale_color_manual(values = c("green3", "orange2", "steelblue3", "red3")) +
-  scale_fill_manual(values = c("green3", "orange2", "steelblue3", "red3")) +
-  scale_linetype_manual(name = "Score means: ", values = c("dashed", "solid")) + 
+  scale_color_manual(values = c("firebrick3", "dodgerblue4", "steelblue3", "red3")) +
+  scale_fill_manual(values = c("firebrick3", "dodgerblue4", "steelblue3", "red3")) +
+  scale_linetype_manual(name = "Score means: ", values = c("solid", "solid")) + 
   guides(fill = F, color = F) +
   theme_bw() + 
   theme(legend.justification = c(0, 1), 
@@ -140,7 +140,7 @@ plot_rt_break <-
   plot_rt_break +
   ggtitle("Reaction time until braking") + 
   labs(x = "Interaction system",
-       y = "Reaction time in s")
+       y = "Reaction time (s)")
 
 plot(plot_rt_break)
 
@@ -151,3 +151,25 @@ ggsave(filename = "brake-rt.png",
        height = 5,
        units = "cm",
        dpi = 600)
+
+
+
+# t-test ------------------------------------------------------------------
+
+dat_test <- 
+  dat_test1 <- 
+  dat %>% 
+  filter(grepl("s04_e03", case)) %>% 
+  filter(!is_outlier) 
+
+dat_test1 <- 
+  dat_test %>% 
+  filter(condition_scenario == "Gesture") %>% 
+  pull(time_s_diff)
+
+dat_test2 <- 
+  dat_test %>% 
+  filter(condition_scenario == "Touch") %>% 
+  pull(time_s_diff)
+  
+t.test(dat_test1, dat_test2)

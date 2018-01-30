@@ -344,3 +344,140 @@ windows();
 plot(coll[,1], coll[, 2], type = "l", col = "red", ylim = c(0, 1))
 lines(coll[,1], coll[, 3], col = "blue")
 abline(h = 0.05, lty = 3)
+
+coll_long <- data.frame(coll)
+names(coll_long) <- c("distance", "gesture", "touch")
+
+coll_long <- 
+  coll_long %>% 
+  gather(variable, value, -distance) %>% 
+  mutate(variable = factor(variable)) %>% 
+  mutate(variable = factor(variable, labels = c("Gesture", "Touch")))
+
+plot_time_headway_distance <- 
+  ggplot() + 
+  geom_line(data = coll_long,
+            aes(x = distance,
+                y = value,
+                color = variable),
+            size = 0.5) + 
+  scale_color_manual("Interaction type", values = c("firebrick3", "dodgerblue4")) +
+  coord_cartesian(ylim = c(0, 0.5)) +
+  geom_hline(yintercept = 0.05) + 
+  ggtitle("Time headway: Significance over distance") + 
+  labs(x = "Distance (m)",
+       y = "Probability") +
+  theme_bw() +
+  theme(title = element_text(size = 7, face = "bold")) + 
+  theme(axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size = 7)) + 
+  theme(axis.text.x = element_text(size = 6, color = "black"),
+        axis.text.y = element_text(size = 6, color = "black")) + 
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.margin = margin(rep(0.1, 4), unit='cm'),
+        legend.title = element_text(size = 6, color = "black"),
+        legend.text = element_text(size = 6, color = "black")) + 
+  theme(legend.justification = c(1, 1), 
+        legend.position = c(0.998, 0.998),
+        legend.background = element_rect(color = "black",
+                                         size = 0.2)) + 
+  scale_x_continuous(expand = c(0, 0))
+
+ggsave(filename = "time_headway_over_distance.png", 
+       plot = plot_time_headway_distance,
+       path = "plots",
+       width = 8,
+       height = 5,
+       units = "cm",
+       dpi = 600)
+
+
+
+
+temp <- 
+  dat_gap_test %>% 
+  filter(sxx_exx_dti_m == 25)
+
+temp1 <- temp %>% filter(interaction_type == "gesture") %>% pull(time_headway_s_diff_to_key_value)
+temp2 <- temp %>% filter(interaction_type == "touch") %>% pull(time_headway_s_diff_to_key_value)
+
+result1 <- t.test(temp1)
+result2 <- t.test(temp2)
+
+temp1 <- temp %>% filter(interaction_type == "gesture") %>% pull(time_headway_s)
+temp2 <- temp %>% filter(interaction_type == "touch") %>% pull(time_headway_s)
+
+t.test(temp1, temp2)
+
+
+
+
+
+# Viz for kolloq ----------------------------------------------------------
+
+dat_gap_diff_to_key_value_viz <- 
+  dat_gap_diff_to_key_value %>% 
+  ungroup() %>% 
+  filter(sxx_exx == "s02_e03") %>% 
+  filter(sxx_exx_dti_m >= 0 & sxx_exx_dti_m <= 50) %>% 
+  mutate(interaction_type = factor(interaction_type)) %>% 
+  mutate(interaction_type = factor(interaction_type, label = c("Gesture", "Touch")))
+
+dat_gap_diff_to_key_value_summary_viz <- 
+  dat_gap_diff_to_key_value_summary %>% 
+  ungroup() %>% 
+  filter(sxx_exx == "s02_e03") %>% 
+  filter(sxx_exx_dti_m >= 0 & sxx_exx_dti_m <= 50) %>% 
+  mutate(interaction_type = factor(interaction_type)) %>% 
+  mutate(interaction_type = factor(interaction_type, labels = c("Gesture", "Touch")))
+
+plot_dist_diff_to_key_value_viz <- 
+  ggplot() + 
+  ## Individual data
+  geom_line(data = dat_gap_diff_to_key_value_viz,
+            aes_string(x = sett_proc$col_name_am,
+                       y = paste_(sett_proc$col_name_indicator, "diff_to_key_value"),
+                       group = "case",
+                       color = sett_proc$col_name_group),
+            alpha = 0.05) +
+  geom_line(data = dat_gap_diff_to_key_value_summary_viz,
+            aes_string(x = sett_proc$col_name_am,
+                       y = paste_(sett_proc$col_name_indicator, "avg"),
+                       color = sett_proc$col_name_group),
+            size = 0.5) + 
+  #geom_hline(yintercept = 0, size = 0.5) +
+  #facet_grid(.~sxx_exx) + 
+  coord_cartesian(ylim = c(-2.5, 2.5), expand = F) +
+  scale_color_manual("Interaction type",
+                     values = c("firebrick3", "dodgerblue4")) + 
+  ggtitle("Time headway", 
+          subtitle = "Difference of time headway (TH) to averaged baselines") + 
+  labs(x = "Distance (m)",
+       y = "TH Interaction vs. TH Baseline (s)") +
+  theme_bw() +
+  theme(title = element_text(size = 7, face = "bold")) + 
+  theme(axis.title.x = element_text(size = 7),
+        axis.title.y = element_text(size = 7)) + 
+  theme(axis.text.x = element_text(size = 6, color = "black"),
+        axis.text.y = element_text(size = 6, color = "black")) + 
+  theme(legend.key.size = unit(0.2, "cm"),
+        legend.margin = margin(rep(0.1, 4), unit='cm'),
+        legend.title = element_text(size = 6, color = "black"),
+        legend.text = element_text(size = 6, color = "black")) + 
+  theme(legend.justification = c(1, 1), 
+        legend.position = c(0.998, 0.998),
+        legend.background = element_rect(color = "black",
+                                         size = 0.2))
+
+
+
+#windows(); plot(plot_dist_diff_to_key_value_viz)
+
+
+ggsave(filename = "time_headway.png", 
+       plot = plot_dist_diff_to_key_value_viz,
+       path = "plots",
+       width = 8,
+       height = 5,
+       units = "cm",
+       dpi = 600)

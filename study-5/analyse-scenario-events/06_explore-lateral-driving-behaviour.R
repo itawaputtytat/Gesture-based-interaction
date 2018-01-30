@@ -18,8 +18,8 @@ sett_proc$treshold_steer_angle_degs <- 30
 #sett_proc$col_name_of_interest <- "steer_angle_deg"
 #sett_proc$col_name_of_interest <- "steer_angle_deg_v2"
 #sett_proc$col_name_of_interest <- "brake_pressure_bar"
-#sett_proc$col_name_of_interest <- "steer_angle_speed_degs"
-sett_proc$col_name_of_interest <- "itrace_acc_y"
+sett_proc$col_name_of_interest <- "steer_angle_speed_degs"
+#sett_proc$col_name_of_interest <- "itrace_acc_y"
 
 #dat_pedal_summary_first_acc_after_braking
 

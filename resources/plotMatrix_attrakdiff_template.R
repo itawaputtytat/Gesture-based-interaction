@@ -3,15 +3,16 @@
 
 
 # Dummy -------------------------------------------------------------------
+
 plotMatrix_attrakdiff_template <- 
   ggplot() +
   geom_blank() + 
   theme_bw() + 
   theme(
     panel.border = element_rect(colour = "black"),
-    plot.margin=unit(c(0.5, 0.5, 0.5, 0.5), units="line"),
+    plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), units="line"),
     legend.position = "right",
-    legend.margin = unit(-1, "lines"),
+    legend.spacing = unit(-1, "lines"),
     legend.key = element_blank(),
     legend.key.height = unit(0.85, "line"),
     #legend.title = element_blank(),
@@ -69,10 +70,10 @@ for(l in 1:nrow(labels_attrakdiff_matrix)) {
 plotMatrix_attrakdiff_template <- 
   plotMatrix_attrakdiff_template + 
   
-  labs(x = "Pragmatic Quality (PQ)",
-       y = "Hedonic Quality (HQ)",
-       shape = set4plot$legend.title[["attrakdiff"]],
-       colour = set4plot$legend.title[["attrakdiff"]]) +
+  # labs(x = "Pragmatic Quality (PQ)",
+  #      y = "Hedonic Quality (HQ)",
+  #      shape = set4plot$legend.title[["attrakdiff"]],
+  #      colour = set4plot$legend.title[["attrakdiff"]]) +
   
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
