@@ -72,5 +72,3 @@ sett_query$filter$bool_op_between <- c("AND")
 # Data processing ---------------------------------------------------------
 
 dbGetQuery_batch(sett_query$db_conn_name, sett_query, bind_rows = T)
-
-

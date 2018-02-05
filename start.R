@@ -8,10 +8,16 @@ outputString("* Framework V3", type = "message")
 
 
 
+# Libraries ---------------------------------------------------------------
+
+outputString("Attaching libraries ...")
+libraries <- readLines("init-framework/data-processing-lib_v2.R")
+
+
 # Database ----------------------------------------------------------------
 
 outputSectionTitle("Database")
-outputString("Attaching libraries ...")
+
 library(RPostgreSQL)
 outputDone(step = T)
 

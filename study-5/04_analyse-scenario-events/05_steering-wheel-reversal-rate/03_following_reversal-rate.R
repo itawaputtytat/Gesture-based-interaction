@@ -4,42 +4,50 @@
 sett_proc <- c()
 sett_proc$df_name <- "dat_study5_t_adtf_sxx_exx_exx_full"
 sett_proc$thresholds$am_limit1 <- 0
-sett_proc$thresholds$am_limit2 <- 90
+sett_proc$thresholds$am_limit2 <- 100
 sett_proc$thresholds$steer_angle_deg <- 0.5
 sett_proc$scenario <- "s02_e03"
 #sett_proc$scenario <- "s04_e01"
 sett_proc$col_name_group <- "interaction_type"
 sett_proc$col_name_indicator <- "reversal_rate"
 
+
+
+# Create plot template ----------------------------------------------------
+
 plot_template <- 
   ggplot() + 
   ggtitle(label = "Reversal rate",
-          subtitle = paste("AM:", sett_proc$thresholds$am_limit1,
-                           "to", sett_proc$thresholds$am_limit2))
+          subtitle = 
+            paste("AM:", sett_proc$thresholds$am_limit1,
+                  "to", sett_proc$thresholds$am_limit2))
 
 
 
 # Data preparation --------------------------------------------------------
 
-dat_lat <- 
+dat_reversals <- 
   get(sett_proc$df_name) %>% 
   filter(is_usable) %>% 
-
+  
   ## Exclude third scenario
-  #filter(!grepl("s03", sxx_exx)) %>%
   ## Filter for steering angle
-  filter(steer_angle_deg >= sett_proc$thresholds$steer_angle_deg) %>% 
-  filter(sxx_exx_dti_m >= sett_proc$thresholds$am_limit1 &
-           sxx_exx_dti_m <= sett_proc$thresholds$am_limit2) #%>% 
-  #filter(sxx_exx_dti_m >= 0 & tta_s <= 5) 
+  #filter(steer_angle_deg >= sett_proc$thresholds$steer_angle_deg) %>% 
+  # filter(sxx_exx_dti_m >= sett_proc$thresholds$am_limit1 &
+  #          sxx_exx_dti_m <= sett_proc$thresholds$am_limit2) #%>% 
+  #filter(sxx_exx_dti_m >= 0 & tta_s <= 5) %>% 
+  filter(sxx_exx_dti_m >= 0) %>%
+  group_by(case) %>% 
+  filter(time_s <= (time_s + 5))
 
 # dat_lat <- dat_lat %>% filter(subject_id == 551) 
 
 
+
 # Identify reversals ------------------------------------------------------
 
-dat_lat_reversal_rate <- 
-  dat_lat %>% 
+dat_reversals <- 
+  dat_reversals %>% 
   
   ## Correct steer angle with sign
   mutate(steer_angle_deg_v2 = 
@@ -94,75 +102,123 @@ dat_lat_reversal_rate <-
 
 # Visualize individual case -----------------------------------------------
 
-dat_lat_reversal_rate_viz_ind <- 
-  dat_lat_reversal_rate %>%
-  filter(sxx_exx == "s02_e03") %>% 
-  filter(subject_id == 525)
+dat_reversals_viz_ind <- 
+  dat_reversals %>%
+  filter(sxx_exx == "s00_e01") %>% 
+  filter(subject_id == 509)
 
 plot_reversal <-
   ggplot() +
-  geom_line(data = dat_lat_reversal_rate_viz_ind,
+  geom_line(data = dat_reversals_viz_ind,
             aes_string(x = "sxx_exx_dti_m",
                        y = "steer_angle_deg_v2",
                        group = "case")) +
-  geom_line(data = dat_lat_reversal_rate_viz_ind,
+  geom_line(data = dat_reversals_viz_ind,
             aes_string(x = "sxx_exx_dti_m",
                        y = "steer_direction",
                        group = "case"),
             col = "blue",
             size = 2) +
-  geom_line(data = dat_lat_reversal_rate_viz_ind,
+  geom_line(data = dat_reversals_viz_ind,
             aes_string(x = "sxx_exx_dti_m",
                        y = "steer_direction_v2",
                        group = "case"),
             col = "red",
             size = 1) +
-  facet_grid(sxx_exx~.)
+  facet_grid(sxx_exx~.) + 
+  coord_cartesian(ylim = c(-20, 20))
 
 windows(); plot(plot_reversal)
 
 
 
-# Compute reversal rate ---------------------------------------------------
+# Summarize reversals -----------------------------------------------------
 
-dat_lat_reversal_rate_count_by_subject <- 
-  dat_lat_reversal_rate %>% 
-  
-  ## Compute elapsed time in data section
-  group_by(sxx_exx, case, interaction_type) %>% 
-  mutate(elapsed_time_s = max(time_s) - min(time_s)) %>% 
-  
+dat_reversals_summary <- 
+  dat_reversals %>% 
   ## Filter for non-zero steer angle sequences
+  ## (= removing the first sequence)
   filter(steer_direction_v2 != 0) %>% 
-  
-  ## Count sequences
-  group_by(sxx_exx, case, interaction_type) %>% 
-  summarize(n_reversals = n_distinct(seq_id),
-            elapsed_time_s = max(elapsed_time_s),
-            steer_angle_speed_degs = max(steer_angle_speed_degs)) %>% 
-  
+
+  group_by(sxx_exx, case, subject_id, interaction_type, seq_id) %>% 
+  summarize(steer_angle_deg_first = first(steer_angle_deg),
+            steer_angle_deg_last = last(steer_angle_deg),
+            steer_angle_deg_min = min(steer_angle_deg),
+            steer_angle_deg_max = max(steer_angle_deg),
+            steer_angle_speed_degs_first = first(steer_angle_speed_degs),
+            steer_angle_speed_degs_last = last(steer_angle_speed_degs),
+            steer_angle_speed_degs_min = min(steer_angle_speed_degs),
+            steer_angle_speed_degs_max = max(steer_angle_speed_degs)) %>% 
+  ## Compute gap for from last steering
+  group_by(sxx_exx, subject_id, case, interaction_type) %>% 
+  mutate(steer_angle_deg_last_lag = lag(steer_angle_deg_first, default = 0),
+         steer_angle_deg_gap = steer_angle_deg_first - steer_angle_deg_last_lag) 
+
+dat_reversal_rate <- 
+  dat_reversals_summary %>% 
+  filter(abs(steer_angle_deg_gap) >= 0.5) %>% 
+  filter(abs(steer_angle_speed_degs_max) >= 3) %>% 
   ## Compute reversal rate
-  mutate(reversal_rate = n_reversals / elapsed_time_s) %>% 
-
+  group_by(sxx_exx, case, subject_id, interaction_type) %>% 
+  summarize(n_reversals = n_distinct(seq_id)) %>% 
+  mutate(reversal_rate = n_reversals / 5) %>% 
   ## Code outliers
-  group_by(sxx_exx, interaction_type) %>% 
   mutate(is_outlier = codeOutliersZ(reversal_rate)) 
+
+
+
+# Summarize reversal rate -------------------------------------------------
+
+
+# 
+# dat_reversals_count_by_subject <- 
+#   dat_reversals %>% 
+#   
+#   ## Compute elapsed time in data section
+#   group_by(sxx_exx, case, interaction_type) %>% 
+#   mutate(elapsed_time_s = max(time_s) - min(time_s)) %>% 
+#   
+#   ## Filter for non-zero steer angle sequences
+#   filter(steer_direction_v2 != 0) %>% 
+#   
+#   ## Filter for reversals of > 2 degrees
+#   #filter(steer_angle_deg_gap)
+#   
+#   ## Count sequences
+#   group_by(sxx_exx, case, interaction_type) %>% 
+#   summarize(n_reversals = n_distinct(seq_id),
+#             elapsed_time_s = max(elapsed_time_s),
+#             steer_angle_speed_degs = max(steer_angle_speed_degs)) %>% 
+#   
+#   ## Compute reversal rate
+#   mutate(reversal_rate = n_reversals / elapsed_time_s) %>% 
+# 
+#   ## Code outliers
+#   group_by(sxx_exx, interaction_type) %>% 
+#   mutate(is_outlier = codeOutliersZ(reversal_rate)) 
   
 
 
-# Visualize reversale rate ------------------------------------------------
+# Visualize reversal rate ------------------------------------------------
+
+dat_reversal_rate_plot <- dat_reversal_rate
+# 
+# dat_reversal_rate_plot <-
+#   dat_reversal_rate_plot %>%
+#   filter(abs(steer_angle_deg_gap) >= 0)
 
 plot_reversal_rate_boxplot <- 
   plot_template +
-  geom_boxplot(data = dat_lat_reversal_rate_count_by_subject,
+  geom_boxplot(data = dat_reversal_rate_plot,
                aes_string(x = sett_proc$col_name_group,
                           y = sett_proc$col_name_indicator)) + 
-  geom_point(data = dat_lat_reversal_rate_count_by_subject %>% 
+  geom_point(data = dat_reversal_rate_plot %>% 
                filter(is_outlier),
              aes_string(x = sett_proc$col_name_group,
                         y = sett_proc$col_name_indicator),
              color = "red") + 
-  facet_grid(.~sxx_exx, scales = "free") 
+  facet_grid(.~sxx_exx, scales = "free") +
+  coord_cartesian(ylim = c(0, 5))
 
 plot(plot_reversal_rate_boxplot)
 
@@ -170,37 +226,82 @@ plot(plot_reversal_rate_boxplot)
 
 # Analysis ----------------------------------------------------------------
 
-dat_lat_reversal_rate_count_by_subject_test <- 
-  dat_lat_reversal_rate_count_by_subject %>% 
-  #mutate(reversal_rate = ifelse(reversal_rate > 100, 0, reversal_rate)) %>% 
+# dat_reversals_count_by_subject_test <- 
+#   dat_reversals_count_by_subject %>% 
+#   #mutate(reversal_rate = ifelse(reversal_rate > 100, 0, reversal_rate)) %>% 
+#   filter(!is_outlier) %>% 
+#   filter(sxx_exx != "s00_e01") %>% 
+#   filter(sxx_exx != "s00_e02") #%>% 
+#   #filter(sxx_exx != "s04_e01") 
+
+dat_reversal_rate_test_baseline <- 
+  dat_reversal_rate %>% 
   filter(!is_outlier) %>% 
-  filter(sxx_exx != "s00_e01") %>% 
-  filter(sxx_exx != "s00_e02") #%>% 
-  #filter(sxx_exx != "s04_e01") 
+  filter(sxx_exx %in% c("s00_e01", "s00_e02")) %>% 
+  group_by(subject_id) %>% 
+  summarize(reversal_rate_baseline_avg = mean(reversal_rate))
+  
+dat_reversal_rate_test <- 
+  dat_reversal_rate %>%
+  left_join(dat_reversal_rate_test_baseline) %>% 
+  mutate(reversal_rate_diff = reversal_rate - reversal_rate_baseline_avg) %>% 
+  mutate(is_outlier = codeOutliersZ(reversal_rate_diff, zCutOff = 1.96))
 
-dat_lat_reversal_rate_count_test1 <- 
-  dat_lat_reversal_rate_count_by_subject_test %>% 
+plot_template +
+  geom_boxplot(data = dat_reversal_rate_test,
+               aes_string(x = sett_proc$col_name_group,
+                          y = "reversal_rate_diff")) + 
+  geom_point(data = dat_reversal_rate_test %>% 
+               filter(is_outlier),
+             aes_string(x = sett_proc$col_name_group,
+                        y = "reversal_rate_diff"),
+             color = "red") + 
+  facet_grid(.~sxx_exx, scales = "free") +
+  coord_cartesian(ylim = c(0, 5))
+
+dat_reversal_rate_test <- 
+  dat_reversal_rate_test %>% 
+  filter(!is_outlier)
+
+sett_proc$scenario <- "s01_e02"
+#sett_proc$scenario <- "s02_e03"
+
+dat_reversals_count_test1 <- 
+  dat_reversal_rate_test %>% 
   filter(sxx_exx == sett_proc$scenario) %>% 
-  filter(interaction_type == "gesture") %>% 
-  pull(reversal_rate)
+  filter(interaction_type == "gesture") %>%
+  #filter(reversal_rate_diff < 1.75) %>% 
+  pull(reversal_rate_diff)
 
-dat_lat_reversal_rate_count_test2 <- 
-  dat_lat_reversal_rate_count_by_subject_test %>% 
+dat_reversals_count_test2 <- 
+  dat_reversal_rate_test %>% 
   filter(sxx_exx == sett_proc$scenario) %>% 
   filter(interaction_type == "touch") %>% 
-  pull(reversal_rate)
+  #filter(reversal_rate_diff > 0.5) %>% 
+  pull(reversal_rate_diff)
+
+t.test(dat_reversals_count_test1)
+t.test(dat_reversals_count_test2)
 
 
 
-print(
-  t.test(dat_lat_reversal_rate_count_test1, 
-         dat_lat_reversal_rate_count_test2, 
-         var.equal = F)
-)
+
+
+# print(
+#   t.test(dat_reversals_count_test1, 
+#          dat_reversals_count_test2, 
+#          var.equal = F)
+# )
+
+
+
+# Viz ---------------------------------------------------------------------
+
+
 
 
 dat_reversal_rate_summary_key_viz <- 
-  dat_lat_reversal_rate_count_by_subject %>% 
+  dat_reversals_count_by_subject %>% 
   filter(sxx_exx == "s02_e03") %>% 
   group_by(interaction_type) %>% 
   summarize(val_mean = mean(reversal_rate),
@@ -249,26 +350,36 @@ ggsave(filename = "steering_wheel_reversal.png",
 
 # Viz reversal rate -------------------------------------------------------
 
-dat_lat_reversal_rate_viz <- 
-  dat_lat_reversal_rate %>% 
+dat_reversals_viz <- 
+  dat_reversals %>% 
   filter(sxx_exx == "s02_e03") %>% 
   filter(subject_id == 551)
 
 ggplot() +
-  geom_line(data = dat_lat_reversal_rate_viz,
+  geom_line(data = dat_reversals_viz,
             aes_string(x = "sxx_exx_dti_m",
                        y = "steer_angle_deg_v2",
                        group = "case")) +
-  geom_line(data = dat_lat_reversal_rate,
+  geom_line(data = dat_reversals,
             aes_string(x = "sxx_exx_tti_s",
                        y = "steer_direction",
                        group = "case"),
             col = "blue",
             size = 2) +
-  geom_line(data = dat_lat_reversal_rate,
+  geom_line(data = dat_reversals,
             aes_string(x = "sxx_exx_tti_s",
                        y = "steer_direction_v2",
                        group = "case"),
             col = "red",
             size = 1) +
   facet_grid(sxx_exx~.)
+
+
+
+ggplot() + 
+  geom_line(data = dat_reversals %>% 
+              filter(subject_id == 530) %>% 
+              filter(sxx_exx == "s00_e01"),
+            aes(x = sxx_exx_dti_m,
+                       y = steer_angle_speed_degs)) + 
+  coord_cartesian(ylim = c(-20, 20))
