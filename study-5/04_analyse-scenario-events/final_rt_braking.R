@@ -43,7 +43,7 @@ dat <-
            factor(scenario,
                   levels = c("turning", "evasion", "pedestrian", "reverse"),
                   labels = c("Turning vehicle",
-                             "Evasing vehicle",
+                             "Evading vehicle",
                              "Crossing pedestrian",
                              "Parking vehicle")))
 
@@ -127,10 +127,6 @@ plot(plot_rt_break)
 
 
 # Post-processing ---------------------------------------------------------
-
-sett_plot <- c()
-sett_plot$legend_text_size <- 6
-sett_plot$legend_text_color <- "black"
 
 plot_rt_break <- 
   plot_rt_break +
